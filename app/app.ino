@@ -284,7 +284,7 @@ void loop()
         // Check if it is a step interrupt
         if (sensor->isStepCounter()) {
             // Get step data from register
-            uint32_t stepCount = sensor->getCounter();
+            stepCount = sensor->getCounter();
         }
         // Print step count to serial
         Serial.print("Step Count: ");
