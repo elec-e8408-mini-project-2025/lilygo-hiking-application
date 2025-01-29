@@ -2,8 +2,6 @@
 #include "./src/data.h"
 #include "./src/restful.h"
 
-#define ESP32_WROOM_32 5
-
 #ifndef ESP32_WROOM_32
 #include "./src/twatch/interface.h"
 #include "./src/twatch/step.h"
