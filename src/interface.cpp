@@ -11,6 +11,37 @@ lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
 lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 
+/*
+ * Declare global variables for buttons and views
+ * lv_obj_t: Create a base object (a rectangle)
+ */
+// Event handler function
+static void event_handler(lv_obj_t *obj, lv_event_t event)
+{
+    // ref: https://docs.lvgl.io/8/overview/event.html?highlight=lv_event_clicked#events
+    if (event == LV_EVENT_CLICKED)
+    {
+        Serial.println("Button clicked");
+
+        if (obj == settings_btn)
+        {
+            lv_scr_load(settings_view); // Load the settings view
+        }
+        else if (obj == session_btn)
+        {
+            lv_scr_load(session_view); // Load the session view
+        }
+        else if (obj == past_sessions_btn)
+        {
+            lv_scr_load(past_sessions_view); // load past sessions view
+        }
+        // TODO: This could perhaps be done more nicely?
+        else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
+        {
+            lv_scr_load(main_view); // load main menu view
+        }
+    }
+}
 // Function to create the Main Menu view
 void createMainMenuView()
 {
@@ -121,32 +152,30 @@ void createPastSessionsView()
     lv_label_set_text(main_menu_lbl, "Main Menu");
 }
 
-// Event handler function
-static void event_handler(lv_obj_t *obj, lv_event_t event)
-{
-    // ref: https://docs.lvgl.io/8/overview/event.html?highlight=lv_event_clicked#events
-    if (event == LV_EVENT_CLICKED)
-    {
-        Serial.println("Button clicked");
 
-        if (obj == settings_btn)
-        {
-            lv_scr_load(settings_view); // Load the settings view
-        }
-        else if (obj == session_btn)
-        {
-            lv_scr_load(session_view); // Load the session view
-        }
-        else if (obj == past_sessions_btn)
-        {
-            lv_scr_load(past_sessions_view); // load past sessions view
-        }
-        // TODO: This could perhaps be done more nicely?
-        else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
-        {
-            lv_scr_load(main_view); // load main menu view
-        }
-    }
+void initInterface()
+{
+
+    // ref: https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/examples/LVGL/Lvgl_Button/Lvgl_Button.ino#L18
+    ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
+    ttgo->begin();                // Initialize TTGO smartwatch hardware
+    ttgo->openBL();               // Turn on the blacklight of the TTGO smartwatch display
+    ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch
+
+    // Initialize views
+    createMainMenuView();
+    createSettingsView();
+    createSessionView();
+    createPastSessionsView();
+
+    // Load the initial screen (Main Menu)
+    // ref: https://docs.lvgl.io/8/overview/display.html
+    lv_scr_load(main_view);
+}
+
+void handleTasksInterface()
+{
+    lv_task_handler(); // Handle LVGL tasks
 }
 
 #endif

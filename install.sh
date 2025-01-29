@@ -5,7 +5,7 @@
 
 # Global variables
 ARDUINO_CLI_MIN="1.1"
-ARDUINO_ESP32_MIN="3.1"
+ARDUINO_ESP32_MIN="2.0"
 # Set defaults
 if [ -z "$ESP32_USB" ]; then
     ESP32_USB="/dev/ttyUSB0"
@@ -61,7 +61,7 @@ check_arduino_cli_esp32()
         echo -e "$ERROR: arduino-cli esp32 is not installed"
         echo -e "$ERROR: Please run the commands: "
         echo -e "$ERROR:    arduino-cli core update-index --config-file arduino-cli.yaml"
-        echo -e "$ERROR:    arduino-cli core install esp32:esp32"
+        echo -e "$ERROR:    arduino-cli core install esp32:esp32@2.0.14"
         echo "$FIN_ERROR"
         exit 1
     fi
@@ -96,7 +96,6 @@ compile_app()
         ESP32_WROOM_32)
             FQBN="esp32:esp32:esp32-poe-iso"
             ;;
-
         LILYGO_WATCH_2020_V1)
             FQBN="esp32:esp32:twatch" 
             ;;  
@@ -104,18 +103,20 @@ compile_app()
             FQBN="esp32:esp32:twatch" 
             ;;  
         LILYGO_WATCH_2020_V3)
-            FQBN="esp32:esp32:twatchs3"
+            FQBN="esp32:esp32:twatch"
             ;;  
         *)
-            echo -e "$ERROR Unrecognized device: $DEVICE"
+            echo -e "$ERROR: Unrecognized device: $DEVICE"
+            echo "$FIN_ERROR"
+            exit 1
             ;;
     esac
 
-    arduino-cli compile --fqbn $FQBN --build-path $(pwd)/build --build-property "build.extra_flags=-D $DEVICE" .
+    arduino-cli compile --fqbn $FQBN --build-path $(pwd)/build --build-property "build.extra_flags=-D $DEVICE -D ESP32" .
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: Compilation failed..."
         echo -e "$ERROR:    Better luck next time."
-        echo "$FIN_ERROR"
+        echo -e "$FIN_ERROR"
         exit 1
     fi
     echo -e "$INFO App compiled in build/"
@@ -124,7 +125,7 @@ compile_app()
         echo -e "$ERROR: Upload failed"
         echo -e "$ERROR:    Most likely you don't have write access."
         echo -e "$ERROR:    Add write access with command: sudo chmod 777 $ESP32_USB"
-        echo "$FIN_ERROR"
+        echo -e "$FIN_ERROR"
         exit 1
     fi
     echo -e "$INFO App uploaded to $ESP32_USB"
@@ -143,7 +144,7 @@ install_libraries()
     
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: Error extracting libraries"
-        echo "$FIN_ERROR"
+        echo -e "$FIN_ERROR"
         exit 1
     fi
 
@@ -152,10 +153,10 @@ install_libraries()
 
 end_info()
 {
-    echo "To access esp32:"
-    echo "  picocom -b 115200 $ESP32_USB"
-    echo "  screen $ESP32_USB 115200"
-    echo "  Or use putty..."
+    echo -e "$INFO To access esp32:"
+    echo -e "$INFO  picocom -b 115200 $ESP32_USB"
+    echo -e "$INFO  screen $ESP32_USB 115200"
+    echo -e "$INFO  Or use putty..."
 }
 
 echo -e "$TITL"

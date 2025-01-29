@@ -1,5 +1,6 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
+#define LILYGO_WATCH_LVGL
 #include <LilyGoWatch.h>
 
 void createMainMenuView();
@@ -10,6 +11,8 @@ void createSettingsView();
 
 void createPastSessionsView();
 
-static void event_handler(lv_obj_t *obj, lv_event_t event);
+void initInterface();
+
+void handleTasksInterface();
 
 #endif
