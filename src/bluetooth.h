@@ -1,6 +1,6 @@
 #include "config.h"
-#ifndef DATA_H
-#define DATA_H
+#ifndef BLUETOOTH_H
+#define BLUETOOTH_H
 
 
 

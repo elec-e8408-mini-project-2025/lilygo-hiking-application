@@ -1,6 +1,6 @@
 #include "config.h"
-#ifndef DATA_H
-#define DATA_H
+#ifndef NET_H
+#define NET_H
 
 
 

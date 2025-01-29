@@ -1,9 +1,15 @@
 #!/bin/bash
 
+
+. config.ini
+
 # Global variables
 ARDUINO_CLI_MIN="1.1"
 ARDUINO_ESP32_MIN="3.1"
-ESP32_DEVICE="/dev/ttyUSB0"
+# Set defaults
+if [ -z "$ESP32_USB" ]; then
+    ESP32_USB="/dev/ttyUSB0"
+fi
 
 # Colored log statuses for console outputs 
 # Bold and Red color
@@ -74,54 +80,92 @@ check_arduino_cli_esp32()
 
 check_usb()
 {
-    USB=$(arduino-cli board list | grep $ESP32_DEVICE)
+    USB=$(arduino-cli board list | grep $ESP32_USB)
     if [ -z "$USB" ]; then
-        echo -e "$ERROR USB device not found: $ESP32_DEVICE"
+        echo -e "$ERROR USB device not found: $ESP32_USB"
         echo -e "$FIN_ERROR"
         exit 1
     fi
 
-    echo -e "$INFO USB recognized: $ESP32_DEVICE"
+    echo -e "$INFO USB recognized: $ESP32_USB"
 }
 
 compile_app()
 {
-    arduino-cli compile --fqbn esp32:esp32:esp32-poe-iso --build-path $(pwd)/build .
+    case "$DEVICE" in
+        ESP32_WROOM_32)
+            FQBN="esp32:esp32:esp32-poe-iso"
+            ;;
+
+        LILYGO_WATCH_2020_V1)
+            FQBN="esp32:esp32:twatch" 
+            ;;  
+        LILYGO_WATCH_2020_V2)
+            FQBN="esp32:esp32:twatch" 
+            ;;  
+        LILYGO_WATCH_2020_V3)
+            FQBN="esp32:esp32:twatchs3"
+            ;;  
+        *)
+            echo -e "$ERROR Unrecognized device: $DEVICE"
+            ;;
+    esac
+
+    arduino-cli compile --fqbn $FQBN --build-path $(pwd)/build --build-property "build.extra_flags=-D $DEVICE" .
     if [[ $? -ne 0 ]]; then
-        echo -e "$ERROR: Compilation error"
+        echo -e "$ERROR: Compilation failed..."
+        echo -e "$ERROR:    Better luck next time."
         echo "$FIN_ERROR"
         exit 1
     fi
-
-    if [[ $? -ne 0 ]]; then
-        echo -e "$ERROR: Compilation error"
-        echo "$FIN_ERROR"
-        exit 1
-    fi
-
-    arduino-cli upload -p $ESP32_DEVICE --fqbn esp32:esp32:esp32-poe-iso --input-dir $(pwd)/build .
+    echo -e "$INFO App compiled in build/"
+    arduino-cli upload -p $ESP32_USB --fqbn $FQBN --input-dir $(pwd)/build .
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: Upload failed"
         echo -e "$ERROR:    Most likely you don't have write access."
-        echo -e "$ERROR:    Add write access with command: sudo chmod 777 $ESP32_DEVICE"
+        echo -e "$ERROR:    Add write access with command: sudo chmod 777 $ESP32_USB"
+        echo "$FIN_ERROR"
+        exit 1
+    fi
+    echo -e "$INFO App uploaded to $ESP32_USB"
+
+}
+
+install_libraries()
+{
+    if [ -n "$(arduino-cli lib list | grep "TTGO TWatch Library")" ]; then
+        echo -e "$INFO Libraries already installed."
+        return 0
+    fi
+    arduino-cli config set library.enable_unsafe_install true
+
+    arduino-cli lib install --git-url https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library.git
+    
+    if [[ $? -ne 0 ]]; then
+        echo -e "$ERROR: Error extracting libraries"
         echo "$FIN_ERROR"
         exit 1
     fi
 
+    echo -e "$INFO TTGO TWatch library installed"
 }
 
 end_info()
 {
     echo "To access esp32:"
-    echo "  picocom -b 115200 $ESP32_DEVICE"
-    echo "  screen $ESP32_DEVICE 115200"
+    echo "  picocom -b 115200 $ESP32_USB"
+    echo "  screen $ESP32_USB 115200"
+    echo "  Or use putty..."
 }
+
 echo -e "$TITL"
 
 # Run functions sequentially
 check_arduino_cli_version
-check_arduino_cli_esp32
+# check_arduino_cli_esp32
 check_usb
+install_libraries
 compile_app
+end_info
 
 echo -e "$FIN_INFO"
