@@ -11,7 +11,11 @@ TFT_eSPI *tft;
 BMA *sensor;
 bool irq = false;
 uint32_t stepCount = 0;
+const float step_length = 0.8;
 
+// session view is to be refreshed every second
+unsigned long previousMillis = 0;
+const unsigned long refreshInterval = 1000;
 
 /*
  * Declare global variables for buttons and views
@@ -24,7 +28,7 @@ lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 // Function to create the Main Menu view
 void createMainMenuView()
 {
-    main_view = lv_obj_create(NULL, NULL); // Create a new object for the main screen
+    main_view = lv_obj_create(NULL, NULL); // Create a new object for the main view
 
     // Label for title
     lv_obj_t *main_view_title = lv_label_create(main_view, NULL);
@@ -59,18 +63,20 @@ void createMainMenuView()
 // Function to create Session view
 void createSessionView()
 {
-    session_view = lv_obj_create(NULL, NULL); // Create a new object for the main screen
+    session_view = lv_obj_create(NULL, NULL); // Create a new object for the session view
 
     // Label for steps
     lv_obj_t *steps = lv_label_create(session_view, NULL);
-    char labelText[32];  // Ensure the buffer is large enough
-    sprintf(labelText, "STEPS.......%u", stepCount);
-    lv_label_set_text(steps, labelText);
+    char lblTextstepCount[32];  // Ensure the buffer is large enough
+    sprintf(lblTextstepCount, "STEPS.......%u", stepCount);
+    lv_label_set_text(steps, lblTextstepCount);
     lv_obj_align(steps, NULL, LV_ALIGN_CENTER, 0, -40);
 
     // Label for distance
     lv_obj_t *distance = lv_label_create(session_view, NULL);
-    lv_label_set_text(distance, "DISTANCE....0");
+    char lblTextDistance[32];  // Make sure buffer is large enough
+    sprintf(lblTextDistance, "DISTANCE....%.2f", stepCount * step_length);
+    lv_label_set_text(distance, lblTextDistance);
     lv_obj_align(distance, NULL, LV_ALIGN_CENTER, 0, -20);
 
     // Label for avg.speed
@@ -90,7 +96,7 @@ void createSessionView()
 // Function to create Settings view
 void createSettingsView()
 {
-    settings_view = lv_obj_create(NULL, NULL); // Create a new object for the settings screen
+    settings_view = lv_obj_create(NULL, NULL); // Create a new object for the settings view
 
     // Label for Settings
     lv_obj_t *label = lv_label_create(settings_view, NULL);
@@ -117,7 +123,7 @@ void createSettingsView()
 // Function to create Past Sessions View
 void createPastSessionsView()
 {
-    past_sessions_view = lv_obj_create(NULL, NULL); // Create a new object for the main screen
+    past_sessions_view = lv_obj_create(NULL, NULL); // Create a new object for the past sessions view
 
     // Label for steps
     lv_obj_t *table_lbl = lv_label_create(past_sessions_view, NULL);
@@ -161,6 +167,20 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             lv_scr_load(main_view); // load main menu view
         }
     }
+}
+
+/*
+ * Helper function that refreshes session view at predefined intervals
+ * when session view is rendered
+ */
+void refreshSessionView() {
+    // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
+    if (session_view == lv_scr_act()) {
+      lv_obj_clean(session_view);
+      createSessionView();
+      lv_scr_load(session_view);
+    }
+    
 }
 
 /*
@@ -290,6 +310,13 @@ void loop()
         Serial.print("Step Count: ");
         Serial.println(stepCount);
         
+    }
+
+    // Refresh the session view every second
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= refreshInterval) {
+      previousMillis = currentMillis;
+      refreshSessionView();
     }
 
     delay(20);          // Short delay to avoid overloading the processor
