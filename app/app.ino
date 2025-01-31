@@ -1,6 +1,6 @@
 /*
  * GENERAL NOTES:
- * - the buttons were based on TTGO example LVGL -> lvgl_button
+ * the buttons were based on TTGO example LVGL -> lvgl_button
  */
 #include "config.h"
 
@@ -9,13 +9,14 @@ TTGOClass *ttgo;
 // Step counter 
 TFT_eSPI *tft;
 BMA *sensor;
-bool irq = false;
+bool irqAcc = false;
+bool irqPEK = false;
 uint32_t stepCount = 0;
 const float step_length = 0.8;
 
 // session view is to be refreshed every second
 unsigned long previousMillis = 0;
-const unsigned long refreshInterval = 1000;
+const unsigned long refreshInterval = 250;
 
 /*
  * Declare global variables for buttons and views
@@ -174,33 +175,26 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
  * when session view is rendered
  */
 void refreshSessionView() {
+    // Serial.println("refreshSesssionView.BEGIN");
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
     if (session_view == lv_scr_act()) {
+      Serial.println("refreshSessionView.cleanAndLoadSessionView");
       lv_obj_clean(session_view);
       createSessionView();
       lv_scr_load(session_view);
     }
+    // Serial.println("refreshSesssionView.END");
     
 }
 
 /*
- * Configures the app
+ * Sets up accelerator
+ * Code taken from TTGO example stepCount
  */
-void setup()
-{
-    // Initialize serial communication at given baud rate
-    // ref: https://docs.arduino.cc/language-reference/en/functions/communication/serial/begin/
-    Serial.begin(115200);
-
-    // ref: https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/examples/LVGL/Lvgl_Button/Lvgl_Button.ino#L18
-    ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
-    ttgo->begin();                // Initialize TTGO smartwatch hardware
-    ttgo->openBL();               // Turn on the blacklight of the TTGO smartwatch display
-    ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch
-
+void setupAccelerator() {
+  Serial.println("setupAccelerator.BEGIN");
     sensor = ttgo->bma;
 
-    // This code segment is from the TTGO example project stepCount
     // Accel parameter structure
     Acfg cfg;
     /*!
@@ -258,7 +252,7 @@ void setup()
     pinMode(BMA423_INT1, INPUT);
     attachInterrupt(BMA423_INT1, [] {
         // Set interrupt to set irq value to 1
-        irq = 1;
+        irqAcc = 1;
     }, RISING); //It must be a rising edge
 
     // Enable BMA423 step count feature
@@ -269,6 +263,48 @@ void setup()
 
     // Turn on step interrupt
     sensor->enableStepCountInterrupt();
+    Serial.println("setupAccelerator.END");
+}
+
+/*
+ * Sets up toggle screen ON/OFF
+ * Code taken from TTGO example WakeUpFormTouchScreen
+ */
+void setupToggleScreen() {
+  Serial.println("setupToggleScreen.BEGIN");
+  pinMode(AXP202_INT, INPUT_PULLUP);
+    attachInterrupt(AXP202_INT, [] {
+        irqPEK = true;
+    }, FALLING);
+    //!Clear IRQ unprocessed  first
+    ttgo->power->enableIRQ(AXP202_PEK_SHORTPRESS_IRQ, true);
+    ttgo->power->clearIRQ();
+
+    pinMode(TOUCH_INT, INPUT);
+    Serial.println("setupToggleScreen.END");
+
+}
+
+/*
+ * Configures the app
+ */
+void setup()
+{
+    Serial.println("setup.BEGIN");
+    // Initialize serial communication at given baud rate
+    // ref: https://docs.arduino.cc/language-reference/en/functions/communication/serial/begin/
+    Serial.begin(115200);
+
+    // ref: https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/examples/LVGL/Lvgl_Button/Lvgl_Button.ino#L18
+    ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
+    ttgo->begin();                // Initialize TTGO smartwatch hardware
+    ttgo->openBL();               // Turn on the blacklight of the TTGO smartwatch display
+    ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch  
+    
+    // Setup touch screen on and off toggling
+    setupToggleScreen();
+    // setup up accelerator functionalities 
+    setupAccelerator();
 
     // Initialize views
     createMainMenuView();
@@ -279,21 +315,63 @@ void setup()
     // Load the initial screen (Main Menu)
     // ref: https://docs.lvgl.io/8/overview/display.html
     lv_scr_load(main_view);
+    Serial.println("setup.END");
 }
 
 /*
- * Main logic loop:
- *  - calls LVGL task handler
- *  - sets delay for looping
+ * PEK button used to turn touch screen on and off
+ * FROM TTGO example WakeUpFormTouchScreen
  */
+void loopWakeUpFormTouchScreen() {
+  // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
+  if (irqPEK) {
+        Serial.println("loopWakeUpFormTouchScreen.irq.true");
+        irqPEK = false;
+        ttgo->power->readIRQ();
+        if (ttgo->power->isPEKShortPressIRQ()) {
+            // Clean power chip irq status
+            ttgo->power->clearIRQ();
 
-void loop()
-{
-    lv_task_handler(); // Handle LVGL tasks
-    
-    if (irq) {
+            // Set  touchscreen sleep
+            ttgo->displaySleep();
+
+            /*
+            In TWatch2019/ Twatch2020V1, touch reset is not connected to ESP32,
+            so it cannot be used. Set the touch to sleep,
+            otherwise it will not be able to wake up.
+            Only by turning off the power and powering on the touch again will the touch be working mode
+            // ttgo->displayOff();
+            */
+
+            ttgo->powerOff();
+
+            //Set all channel power off
+            ttgo->power->setPowerOutPut(AXP202_LDO3, false);
+            ttgo->power->setPowerOutPut(AXP202_LDO4, false);
+            ttgo->power->setPowerOutPut(AXP202_LDO2, false);
+            ttgo->power->setPowerOutPut(AXP202_EXTEN, false);
+            ttgo->power->setPowerOutPut(AXP202_DCDC2, false);
+
+            // TOUCH SCREEN  Wakeup source
+            //esp_sleep_enable_ext1_wakeup(GPIO_SEL_38, ESP_EXT1_WAKEUP_ALL_LOW);
+            // PEK KEY  Wakeup source
+            esp_sleep_enable_ext1_wakeup(GPIO_SEL_35, ESP_EXT1_WAKEUP_ALL_LOW);
+            esp_deep_sleep_start();
+        }
+        ttgo->power->clearIRQ();
+    }
+    // Serial.println("loopWakeUpFormTouchScreen.END");
+}
+
+/*
+ * loop handler for accelerator
+ * Code taken from TTGO example stepCount
+ */
+void loopAccelerator() {
+  // Serial.println("loopAccelerator.BEGIN");
+  if (irqAcc) {
         Serial.println("Interrupt handler handling interrupt");
-        irq = 0;
+        irqAcc = 0;
         bool  rlst;
         do {
             // Read the BMA423 interrupt status,
@@ -311,6 +389,24 @@ void loop()
         Serial.println(stepCount);
         
     }
+    // Serial.println("loopAccelerator.END");
+
+}
+
+/*
+ * Main logic loop:
+ *  - calls LVGL task handler
+ *  - sets delay for looping
+ */
+void loop()
+{
+    // Serial.println("loop.BEGIN");
+    lv_task_handler(); // Handle LVGL tasks
+
+    loopAccelerator();
+
+    loopWakeUpFormTouchScreen();
+    
 
     // Refresh the session view every second
     unsigned long currentMillis = millis();
@@ -320,4 +416,5 @@ void loop()
     }
 
     delay(20);          // Short delay to avoid overloading the processor
+    // Serial.println("loop.END");
 }
