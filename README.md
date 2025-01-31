@@ -54,6 +54,14 @@ arduino-cli compile --fqbn $FQBN --build-path $(pwd)/build --build-property "bui
 arduino-cli upload -p /dev/ttyUSB0 --fqbn esp32:esp32:esp32-poe-iso --input-dir $(pwd)/build .
 ```
 
+or 
+
+configure config.ini 
+
+```console
+./install.sh
+```
+
 
 ### Debugging
 

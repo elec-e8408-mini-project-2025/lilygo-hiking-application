@@ -2,7 +2,7 @@
 
 
 . config.ini
-
+ 
 # Global variables
 ARDUINO_CLI_MIN="1.1"
 ARDUINO_ESP32_MIN="2.0"
@@ -32,8 +32,25 @@ FIN_INFO="$DASH_LINE\n$INFO_LINE\n$DASH_LINE"
 
 # Verify that arduino is installed and meets requirements
 check_arduino_cli_version() {
+    ARDUINO_CLI_TEST=$(which $ARDUINO_CLI_BIN)
+    if [[ $? -ne 0 ]]; then
+        echo -e "$ERROR: arduino-cli is not installed or in PATH"
+        echo -e "$INFO: Download arduino-cli in configured path: $ARDUINO_CLI_BIN? (y/n)"
+        read
+        if [[ $REPLY == "y" ]]; then 
+            mkdir tmp
+            wget --directory-prefix=tmp/ https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.tar.gz
+            tar -xvzf tmp/arduino-cli*.tar.gz -C tmp/
+            cp tmp/arduino-cli $ARDUINO_CLI_BIN
+        else
+            echo -e "$ERROR: arduino-cli is not installed or in PATH"
+            echo -e "$ERROR:    please install arduino-cli: https://arduino.github.io/arduino-cli/1.1/"
+            echo "$FIN_ERROR"
+            exit 1
+        fi
+    fi
     # Get arduino-cli version
-    ARDUINO_CLI_VERSION=$(arduino-cli version 2>&1 | awk 'FNR==1{print $3}' )
+    ARDUINO_CLI_VERSION=$($ARDUINO_CLI_BIN version 2>&1 | awk 'FNR==1{print $3}' )
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: arduino-cli is not installed or in PATH"
         echo -e "$ERROR:    please install arduino-cli: https://arduino.github.io/arduino-cli/1.1/"
@@ -45,6 +62,7 @@ check_arduino_cli_version() {
     ARDUINO_CLI_CURRENT=$(echo "$ARDUINO_CLI_VERSION" | cut -c 1-3 | tr -d .)
 
     if [[ ARDUINO_CLI_CURRENT -lt $(echo "$ARDUINO_CLI_MIN" | tr -d .) ]]; then
+        echo $ARDUINO_CLI_CURRENT
         echo -e "$ERROR arduino-cli version must be $ARDUINO_CLI_MIN<"
         echo -e "$FIN_ERROR"
         exit 1
@@ -56,21 +74,29 @@ check_arduino_cli_version() {
 check_arduino_cli_esp32()
 {
     # Get arduino-cli version
-    ESP32_VERSION=$(arduino-cli core list 2>&1 | grep -i esp32:esp32 | awk 'FNR==1{print $3}' )
-    if [[ $? -ne 0 ]]; then
+    ESP32_VERSION=$($ARDUINO_CLI_BIN core list 2>&1 | grep -i esp32:esp32 | awk 'FNR==1{print $2}' )
+    if [[ -z $ESP32_VERSION ]]; then
         echo -e "$ERROR: arduino-cli esp32 is not installed"
-        echo -e "$ERROR: Please run the commands: "
-        echo -e "$ERROR:    arduino-cli core update-index --config-file arduino-cli.yaml"
-        echo -e "$ERROR:    arduino-cli core install esp32:esp32@2.0.14"
-        echo "$FIN_ERROR"
-        exit 1
+        echo -e "$INFO: install esp32:esp32 core libraries? (y/n)"
+        read
+        if [[ $REPLY == "y" ]]; then 
+            $ARDUINO_CLI_BIN core update-index --config-file arduino-cli.yaml
+            $ARDUINO_CLI_BIN core install esp32:esp32@2.0.14
+            
+        else
+            echo -e "$ERROR: Please run the commands: "
+            echo -e "$ERROR:    arduino-cli core update-index --config-file arduino-cli.yaml"
+            echo -e "$ERROR:    arduino-cli core install esp32:esp32@2.0.14"
+            echo "$FIN_ERROR"
+            exit 1
+        fi
     fi
 
     # Extract major and minor version
     ESP32_CURRENT=$(echo "$ESP32_VERSION" | cut -c 1-3 | tr -d .)
 
     if [[ ESP32_CURRENT -lt $(echo "$ARDUINO_ESP32_MIN" | tr -d .) ]]; then
-        echo -e "$ERROR arduino-cli version must be $ARDUINO_ESP32_MIN<"
+        echo -e "$ERROR arduino-cli esp32 version must be $ARDUINO_ESP32_MIN<"
         echo -e "$FIN_ERROR"
         exit 1
     fi
@@ -80,7 +106,7 @@ check_arduino_cli_esp32()
 
 check_usb()
 {
-    USB=$(arduino-cli board list | grep $ESP32_USB)
+    USB=$($ARDUINO_CLI_BIN board list | grep $ESP32_USB)
     if [ -z "$USB" ]; then
         echo -e "$ERROR USB device not found: $ESP32_USB"
         echo -e "$FIN_ERROR"
@@ -112,7 +138,7 @@ compile_app()
             ;;
     esac
 
-    arduino-cli compile --fqbn $FQBN --build-path $(pwd)/build --build-property "build.extra_flags=-D $DEVICE -D ESP32" .
+    $ARDUINO_CLI_BIN compile --fqbn $FQBN --build-path $(pwd)/build --build-property "build.extra_flags=-D $DEVICE -D ESP32" .
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: Compilation failed..."
         echo -e "$ERROR:    Better luck next time."
@@ -120,7 +146,7 @@ compile_app()
         exit 1
     fi
     echo -e "$INFO App compiled in build/"
-    arduino-cli upload -p $ESP32_USB --fqbn $FQBN --input-dir $(pwd)/build .
+    $ARDUINO_CLI_BIN upload -p $ESP32_USB --fqbn $FQBN --input-dir $(pwd)/build .
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: Upload failed"
         echo -e "$ERROR:    Most likely you don't have write access."
@@ -134,13 +160,14 @@ compile_app()
 
 install_libraries()
 {
-    if [ -n "$(arduino-cli lib list | grep "TTGO TWatch Library")" ]; then
+    if [ -n "$($ARDUINO_CLI_BIN lib list | grep "TTGO TWatch Library")" ]; then
         echo -e "$INFO Libraries already installed."
         return 0
     fi
-    arduino-cli config set library.enable_unsafe_install true
 
-    arduino-cli lib install --git-url https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library.git
+    $ARDUINO_CLI_BIN config set library.enable_unsafe_install true
+
+    $ARDUINO_CLI_BIN lib install --git-url https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library.git
     
     if [[ $? -ne 0 ]]; then
         echo -e "$ERROR: Error extracting libraries"
@@ -163,10 +190,10 @@ echo -e "$TITL"
 
 # Run functions sequentially
 check_arduino_cli_version
-# check_arduino_cli_esp32
-check_usb
+check_arduino_cli_esp32
 install_libraries
 compile_app
+check_usb
 end_info
 
 echo -e "$FIN_INFO"
