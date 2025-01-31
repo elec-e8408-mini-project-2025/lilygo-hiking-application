@@ -18,6 +18,8 @@ const float step_length = 0.8;
 unsigned long previousMillis = 0;
 const unsigned long refreshInterval = 250;
 
+bool displayOn = true;
+
 /*
  * Declare global variables for buttons and views
  * lv_obj_t: Create a base object (a rectangle)
@@ -320,47 +322,46 @@ void setup()
 
 /*
  * PEK button used to turn touch screen on and off
- * FROM TTGO example WakeUpFormTouchScreen
+ * applied based on TTGO example WakeUpFormTouchScreen
  */
 void loopWakeUpFormTouchScreen() {
   // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
   if (irqPEK) {
-        Serial.println("loopWakeUpFormTouchScreen.irq.true");
-        irqPEK = false;
-        ttgo->power->readIRQ();
-        if (ttgo->power->isPEKShortPressIRQ()) {
-            // Clean power chip irq status
-            ttgo->power->clearIRQ();
+    Serial.println("PEK pressed");
+    irqPEK = false;
+    ttgo->power->readIRQ();
 
-            // Set  touchscreen sleep
-            ttgo->displaySleep();
-
-            /*
-            In TWatch2019/ Twatch2020V1, touch reset is not connected to ESP32,
-            so it cannot be used. Set the touch to sleep,
-            otherwise it will not be able to wake up.
-            Only by turning off the power and powering on the touch again will the touch be working mode
-            // ttgo->displayOff();
-            */
-
-            ttgo->powerOff();
-
-            //Set all channel power off
-            ttgo->power->setPowerOutPut(AXP202_LDO3, false);
-            ttgo->power->setPowerOutPut(AXP202_LDO4, false);
-            ttgo->power->setPowerOutPut(AXP202_LDO2, false);
-            ttgo->power->setPowerOutPut(AXP202_EXTEN, false);
-            ttgo->power->setPowerOutPut(AXP202_DCDC2, false);
-
-            // TOUCH SCREEN  Wakeup source
-            //esp_sleep_enable_ext1_wakeup(GPIO_SEL_38, ESP_EXT1_WAKEUP_ALL_LOW);
-            // PEK KEY  Wakeup source
-            esp_sleep_enable_ext1_wakeup(GPIO_SEL_35, ESP_EXT1_WAKEUP_ALL_LOW);
-            esp_deep_sleep_start();
-        }
+    if (ttgo->power->isPEKShortPressIRQ()) {
+        // Clean power chip IRQ status
         ttgo->power->clearIRQ();
+
+        /*
+            Please see the attached references for AXP202 Power domain considerations
+            REFS: 
+              - https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/issues/41
+              - https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/docs/watch_2020_v3.md
+            */
+        if (displayOn) {
+            // Turn touchscreen off
+            ttgo->displaySleep();
+            ttgo->power->setPowerOutPut(AXP202_LDO2, false);
+            Serial.println("Touchscreen turned off");
+        } else {
+            // Turn touchscreen back on
+            ttgo->displayWakeup();
+            ttgo->power->setPowerOutPut(AXP202_LDO2, true);
+            Serial.println("Touchscreen turned on");
+        }
+
+        // Toggle display state
+        displayOn = !displayOn;
     }
+
+    ttgo->power->clearIRQ();
+    
     // Serial.println("loopWakeUpFormTouchScreen.END");
+  }
+    
 }
 
 /*
