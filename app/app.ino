@@ -96,7 +96,6 @@ void createSessionView()
 
     
     // Button for starting a Session
-    // ref: https://docs.lvgl.io/8.0/overview/event.html#add-events-to-the-object
     toggle_session_btn = lv_btn_create(session_view, NULL);
     lv_obj_set_event_cb(toggle_session_btn, event_handler); // Set event handler
     lv_obj_align(toggle_session_btn, NULL, LV_ALIGN_CENTER, 0, 10);
