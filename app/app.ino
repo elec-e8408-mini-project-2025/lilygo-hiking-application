@@ -18,7 +18,13 @@ const float step_length = 0.8;
 unsigned long previousMillis = 0;
 const unsigned long refreshInterval = 250;
 
+// For toggling display state 
 bool displayOn = true;
+
+// Becomes true when start button is pressed in session view
+// Becomes false when stop button is pressed in session view
+bool hasActiveSession = false;
+
 
 /*
  * Declare global variables for buttons and views
@@ -26,6 +32,7 @@ bool displayOn = true;
  */
 lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
 lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
+lv_obj_t *toggle_session_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 
 // Function to create the Main Menu view
@@ -73,20 +80,34 @@ void createSessionView()
     char lblTextstepCount[32];  // Ensure the buffer is large enough
     sprintf(lblTextstepCount, "STEPS.......%u", stepCount);
     lv_label_set_text(steps, lblTextstepCount);
-    lv_obj_align(steps, NULL, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(steps, NULL, LV_ALIGN_CENTER, 0, -70);
 
     // Label for distance
     lv_obj_t *distance = lv_label_create(session_view, NULL);
     char lblTextDistance[32];  // Make sure buffer is large enough
     sprintf(lblTextDistance, "DISTANCE....%.2f", stepCount * step_length);
     lv_label_set_text(distance, lblTextDistance);
-    lv_obj_align(distance, NULL, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_align(distance, NULL, LV_ALIGN_CENTER, 0, -50);
 
     // Label for avg.speed
     lv_obj_t *avg_speed = lv_label_create(session_view, NULL);
     lv_label_set_text(avg_speed, "AVG.SPEED...0");
-    lv_obj_align(avg_speed, NULL, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(avg_speed, NULL, LV_ALIGN_CENTER, 0, -30);
 
+    
+    // Button for starting a Session
+    toggle_session_btn = lv_btn_create(session_view, NULL);
+    lv_obj_set_event_cb(toggle_session_btn, event_handler); // Set event handler
+    lv_obj_align(toggle_session_btn, NULL, LV_ALIGN_CENTER, 0, 10);
+
+    lv_obj_t *toggle_session_lbl = lv_label_create(toggle_session_btn, NULL);
+    
+    if (hasActiveSession) {
+      lv_label_set_text(toggle_session_lbl, "Stop");
+    } else {
+      lv_label_set_text(toggle_session_lbl, "Start");
+    }
+    
     // Button for Main Menu
     main_menu_btn1 = lv_btn_create(session_view, NULL);
     lv_obj_set_event_cb(main_menu_btn1, event_handler); // Set event handler
@@ -94,6 +115,8 @@ void createSessionView()
 
     lv_obj_t *main_menu_lbl = lv_label_create(main_menu_btn1, NULL);
     lv_label_set_text(main_menu_lbl, "Main Menu");
+
+    
 }
 
 // Function to create Settings view
@@ -168,6 +191,16 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
         {
             lv_scr_load(main_view); // load main menu view
+        } 
+        else if (obj == toggle_session_btn)
+        {
+          if (!hasActiveSession) {
+            // Empty step count to prevent screen from rendering old count before reset
+            stepCount = 0;
+            // Reset counter
+            sensor->resetStepCounter();
+          }
+          hasActiveSession = !hasActiveSession;
         }
     }
 }
@@ -180,7 +213,7 @@ void refreshSessionView() {
     // Serial.println("refreshSesssionView.BEGIN");
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
     if (session_view == lv_scr_act()) {
-      Serial.println("refreshSessionView.cleanAndLoadSessionView");
+      // Serial.println("refreshSessionView.cleanAndLoadSessionView");
       lv_obj_clean(session_view);
       createSessionView();
       lv_scr_load(session_view);
@@ -370,8 +403,8 @@ void loopWakeUpFormTouchScreen() {
  */
 void loopAccelerator() {
   // Serial.println("loopAccelerator.BEGIN");
-  if (irqAcc) {
-        Serial.println("Interrupt handler handling interrupt");
+  if (irqAcc && hasActiveSession) {
+        Serial.println("Accelerator interrupt");
         irqAcc = 0;
         bool  rlst;
         do {
