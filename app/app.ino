@@ -1,10 +1,24 @@
 /*
  * GENERAL NOTES:
- * - the buttons were based on TTGO example LVGL -> lvgl_button
+ * the buttons were based on TTGO example LVGL -> lvgl_button
  */
 #include "config.h"
 
 TTGOClass *ttgo;
+
+// Step counter 
+TFT_eSPI *tft;
+BMA *sensor;
+bool irqAcc = false;
+bool irqPEK = false;
+uint32_t stepCount = 0;
+const float step_length = 0.8;
+
+// session view is to be refreshed every second
+unsigned long previousMillis = 0;
+const unsigned long refreshInterval = 250;
+
+bool displayOn = true;
 
 /*
  * Declare global variables for buttons and views
@@ -17,7 +31,7 @@ lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 // Function to create the Main Menu view
 void createMainMenuView()
 {
-    main_view = lv_obj_create(NULL, NULL); // Create a new object for the main screen
+    main_view = lv_obj_create(NULL, NULL); // Create a new object for the main view
 
     // Label for title
     lv_obj_t *main_view_title = lv_label_create(main_view, NULL);
@@ -52,16 +66,20 @@ void createMainMenuView()
 // Function to create Session view
 void createSessionView()
 {
-    session_view = lv_obj_create(NULL, NULL); // Create a new object for the main screen
+    session_view = lv_obj_create(NULL, NULL); // Create a new object for the session view
 
     // Label for steps
     lv_obj_t *steps = lv_label_create(session_view, NULL);
-    lv_label_set_text(steps, "STEPS.......0");
+    char lblTextstepCount[32];  // Ensure the buffer is large enough
+    sprintf(lblTextstepCount, "STEPS.......%u", stepCount);
+    lv_label_set_text(steps, lblTextstepCount);
     lv_obj_align(steps, NULL, LV_ALIGN_CENTER, 0, -40);
 
     // Label for distance
     lv_obj_t *distance = lv_label_create(session_view, NULL);
-    lv_label_set_text(distance, "DISTANCE....0");
+    char lblTextDistance[32];  // Make sure buffer is large enough
+    sprintf(lblTextDistance, "DISTANCE....%.2f", stepCount * step_length);
+    lv_label_set_text(distance, lblTextDistance);
     lv_obj_align(distance, NULL, LV_ALIGN_CENTER, 0, -20);
 
     // Label for avg.speed
@@ -81,7 +99,7 @@ void createSessionView()
 // Function to create Settings view
 void createSettingsView()
 {
-    settings_view = lv_obj_create(NULL, NULL); // Create a new object for the settings screen
+    settings_view = lv_obj_create(NULL, NULL); // Create a new object for the settings view
 
     // Label for Settings
     lv_obj_t *label = lv_label_create(settings_view, NULL);
@@ -108,7 +126,7 @@ void createSettingsView()
 // Function to create Past Sessions View
 void createPastSessionsView()
 {
-    past_sessions_view = lv_obj_create(NULL, NULL); // Create a new object for the main screen
+    past_sessions_view = lv_obj_create(NULL, NULL); // Create a new object for the past sessions view
 
     // Label for steps
     lv_obj_t *table_lbl = lv_label_create(past_sessions_view, NULL);
@@ -138,6 +156,8 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         }
         else if (obj == session_btn)
         {
+            lv_obj_clean(session_view);
+            createSessionView();
             lv_scr_load(session_view); // Load the session view
         }
         else if (obj == past_sessions_btn)
@@ -153,10 +173,126 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
 }
 
 /*
+ * Helper function that refreshes session view at predefined intervals
+ * when session view is rendered
+ */
+void refreshSessionView() {
+    // Serial.println("refreshSesssionView.BEGIN");
+    // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
+    if (session_view == lv_scr_act()) {
+      Serial.println("refreshSessionView.cleanAndLoadSessionView");
+      lv_obj_clean(session_view);
+      createSessionView();
+      lv_scr_load(session_view);
+    }
+    // Serial.println("refreshSesssionView.END");
+    
+}
+
+/*
+ * Sets up accelerator
+ * Code taken from TTGO example stepCount
+ */
+void setupAccelerator() {
+  Serial.println("setupAccelerator.BEGIN");
+    sensor = ttgo->bma;
+
+    // Accel parameter structure
+    Acfg cfg;
+    /*!
+        Output data rate in Hz, Optional parameters:
+            - BMA4_OUTPUT_DATA_RATE_0_78HZ
+            - BMA4_OUTPUT_DATA_RATE_1_56HZ
+            - BMA4_OUTPUT_DATA_RATE_3_12HZ
+            - BMA4_OUTPUT_DATA_RATE_6_25HZ
+            - BMA4_OUTPUT_DATA_RATE_12_5HZ
+            - BMA4_OUTPUT_DATA_RATE_25HZ
+            - BMA4_OUTPUT_DATA_RATE_50HZ
+            - BMA4_OUTPUT_DATA_RATE_100HZ
+            - BMA4_OUTPUT_DATA_RATE_200HZ
+            - BMA4_OUTPUT_DATA_RATE_400HZ
+            - BMA4_OUTPUT_DATA_RATE_800HZ
+            - BMA4_OUTPUT_DATA_RATE_1600HZ
+    */
+    cfg.odr = BMA4_OUTPUT_DATA_RATE_100HZ;
+    /*!
+        G-range, Optional parameters:
+            - BMA4_ACCEL_RANGE_2G
+            - BMA4_ACCEL_RANGE_4G
+            - BMA4_ACCEL_RANGE_8G
+            - BMA4_ACCEL_RANGE_16G
+    */
+    cfg.range = BMA4_ACCEL_RANGE_2G;
+    /*!
+        Bandwidth parameter, determines filter configuration, Optional parameters:
+            - BMA4_ACCEL_OSR4_AVG1
+            - BMA4_ACCEL_OSR2_AVG2
+            - BMA4_ACCEL_NORMAL_AVG4
+            - BMA4_ACCEL_CIC_AVG8
+            - BMA4_ACCEL_RES_AVG16
+            - BMA4_ACCEL_RES_AVG32
+            - BMA4_ACCEL_RES_AVG64
+            - BMA4_ACCEL_RES_AVG128
+    */
+    cfg.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
+
+    /*! Filter performance mode , Optional parameters:
+        - BMA4_CIC_AVG_MODE
+        - BMA4_CONTINUOUS_MODE
+    */
+    cfg.perf_mode = BMA4_CONTINUOUS_MODE;
+
+    // Configure the BMA423 accelerometer
+    sensor->accelConfig(cfg);
+
+    // Enable BMA423 accelerometer
+    // Warning : Need to use steps, you must first enable the accelerometer
+    // Warning : Need to use steps, you must first enable the accelerometer
+    // Warning : Need to use steps, you must first enable the accelerometer
+    sensor->enableAccel();
+
+    pinMode(BMA423_INT1, INPUT);
+    attachInterrupt(BMA423_INT1, [] {
+        // Set interrupt to set irq value to 1
+        irqAcc = 1;
+    }, RISING); //It must be a rising edge
+
+    // Enable BMA423 step count feature
+    sensor->enableFeature(BMA423_STEP_CNTR, true);
+
+    // Reset steps
+    sensor->resetStepCounter();
+
+    // Turn on step interrupt
+    sensor->enableStepCountInterrupt();
+    Serial.println("setupAccelerator.END");
+}
+
+/*
+ * Sets up toggle screen ON/OFF
+ * Code taken from TTGO example WakeUpFormTouchScreen
+ */
+void setupToggleScreen() {
+  Serial.println("setupToggleScreen.BEGIN");
+  pinMode(AXP202_INT, INPUT_PULLUP);
+    attachInterrupt(AXP202_INT, [] {
+        irqPEK = true;
+    }, FALLING);
+    //!Clear IRQ unprocessed  first
+    ttgo->power->enableIRQ(AXP202_PEK_SHORTPRESS_IRQ, true);
+    ttgo->power->clearIRQ();
+
+    pinMode(TOUCH_INT, INPUT);
+    Serial.println("setupToggleScreen.END");
+
+}
+
+/*
  * Configures the app
  */
 void setup()
 {
+    Serial.println("setup.BEGIN");
     // Initialize serial communication at given baud rate
     // ref: https://docs.arduino.cc/language-reference/en/functions/communication/serial/begin/
     Serial.begin(115200);
@@ -165,7 +301,12 @@ void setup()
     ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
     ttgo->begin();                // Initialize TTGO smartwatch hardware
     ttgo->openBL();               // Turn on the blacklight of the TTGO smartwatch display
-    ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch
+    ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch  
+    
+    // Setup touch screen on and off toggling
+    setupToggleScreen();
+    // setup up accelerator functionalities 
+    setupAccelerator();
 
     // Initialize views
     createMainMenuView();
@@ -176,6 +317,81 @@ void setup()
     // Load the initial screen (Main Menu)
     // ref: https://docs.lvgl.io/8/overview/display.html
     lv_scr_load(main_view);
+    Serial.println("setup.END");
+}
+
+/*
+ * PEK button used to turn touch screen on and off
+ * applied based on TTGO example WakeUpFormTouchScreen
+ */
+void loopWakeUpFormTouchScreen() {
+  // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
+  if (irqPEK) {
+    Serial.println("PEK pressed");
+    irqPEK = false;
+    ttgo->power->readIRQ();
+
+    if (ttgo->power->isPEKShortPressIRQ()) {
+        // Clean power chip IRQ status
+        ttgo->power->clearIRQ();
+
+        /*
+            Please see the attached references for AXP202 Power domain considerations
+            REFS: 
+              - https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/issues/41
+              - https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/docs/watch_2020_v3.md
+            */
+        if (displayOn) {
+            // Turn touchscreen off
+            ttgo->displaySleep();
+            ttgo->power->setPowerOutPut(AXP202_LDO2, false);
+            Serial.println("Touchscreen turned off");
+        } else {
+            // Turn touchscreen back on
+            ttgo->displayWakeup();
+            ttgo->power->setPowerOutPut(AXP202_LDO2, true);
+            Serial.println("Touchscreen turned on");
+        }
+
+        // Toggle display state
+        displayOn = !displayOn;
+    }
+
+    ttgo->power->clearIRQ();
+    
+    // Serial.println("loopWakeUpFormTouchScreen.END");
+  }
+    
+}
+
+/*
+ * loop handler for accelerator
+ * Code taken from TTGO example stepCount
+ */
+void loopAccelerator() {
+  // Serial.println("loopAccelerator.BEGIN");
+  if (irqAcc) {
+        Serial.println("Interrupt handler handling interrupt");
+        irqAcc = 0;
+        bool  rlst;
+        do {
+            // Read the BMA423 interrupt status,
+            // need to wait for it to return to true before continuing
+            rlst =  sensor->readInterrupt();
+        } while (!rlst);
+
+        // Check if it is a step interrupt
+        if (sensor->isStepCounter()) {
+            // Get step data from register
+            stepCount = sensor->getCounter();
+        }
+        // Print step count to serial
+        Serial.print("Step Count: ");
+        Serial.println(stepCount);
+        
+    }
+    // Serial.println("loopAccelerator.END");
+
 }
 
 /*
@@ -183,9 +399,23 @@ void setup()
  *  - calls LVGL task handler
  *  - sets delay for looping
  */
-
 void loop()
 {
+    // Serial.println("loop.BEGIN");
     lv_task_handler(); // Handle LVGL tasks
-    delay(5);          // Short delay to avoid overloading the processor
+
+    loopAccelerator();
+
+    loopWakeUpFormTouchScreen();
+    
+
+    // Refresh the session view every second
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= refreshInterval) {
+      previousMillis = currentMillis;
+      refreshSessionView();
+    }
+
+    delay(20);          // Short delay to avoid overloading the processor
+    // Serial.println("loop.END");
 }
