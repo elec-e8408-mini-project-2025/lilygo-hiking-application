@@ -7,17 +7,17 @@
 #include "./src/step.h"
 #endif
 
-// Global data variables
+// System data (Global Variables)
 tripData trips[] = {
         {0,0,0,0,0},
         {1,0,0,0,0},
         {2,0,0,0,0},
         {3,0,0,0,0},
         {4,0,0,0,0},    
-    };
+};
 
 
-// Global serial variables
+// Serial debugging (Global Variables)
 bool commandFinished = 0;
 int byteCount = 0;
 char rxDataSerial[MAX_RESTFUL_REQUEST_SIZE]; 
