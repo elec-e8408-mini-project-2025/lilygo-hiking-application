@@ -1,6 +1,7 @@
 #include "./src/config.h"
 #include "./src/data.h"
 #include "./src/restful.h"
+#include "./src/bluetooth.h"
 #include "./src/net.h"
 #ifndef ESP32_WROOM_32
 #include "./src/interface.h"
@@ -17,11 +18,16 @@ tripData trips[] = {
 };
 
 
-// Serial debugging (Global Variables)
-bool commandFinished = 0;
-int byteCount = 0;
-char rxDataSerial[MAX_RESTFUL_REQUEST_SIZE]; 
+// Serial debugging interface (Global Variables)
+bool commandFinishedSer = 0;
+int byteCountSer = 0;
+char rxDataSer[MAX_RESTFUL_REQUEST_SIZE]; 
 
+
+// Bluetooth (Global variables)
+bool commandFinishedBT = 0;
+int byteCountBT = 0;
+char rxDataBT[MAX_RESTFUL_REQUEST_SIZE]; 
 
 void setup() {
     // Touch Screen interface
@@ -29,7 +35,10 @@ void setup() {
     initInterface();
     #endif
 
-    // Serial debugging 
+    // Bluetooth interface
+    initBluetooth();
+
+    // Serial debugging interface
     Serial.begin(115200);
 }
 
@@ -40,37 +49,37 @@ void loop() {
     handleTasksInterface();
     #endif
    
-    // Serial debugging 
+    // Serial debugging interface
     if (Serial.available() > 0) {
-        rxDataSerial[byteCount] = Serial.read();
-        Serial.print(rxDataSerial[byteCount]);
-        if(rxDataSerial[byteCount] == 13)
+        rxDataSer[byteCountSer] = Serial.read();
+        Serial.print(rxDataSer[byteCountSer]);
+        if(rxDataSer[byteCountSer] == 13)
         {
             Serial.println();
-            commandFinished = 1;
+            commandFinishedSer = 1;
         }
         else
         {
-            ++byteCount;
-            if (byteCount == MAX_RESTFUL_REQUEST_SIZE)
+            ++byteCountSer;
+            if (byteCountSer == MAX_RESTFUL_REQUEST_SIZE)
             {
-                byteCount = 0;
-                commandFinished = 0;
+                byteCountSer = 0;
+                commandFinishedSer = 0;
             }
         }
     }
-    if(commandFinished)
+    if(commandFinishedSer)
     {
-        restfulPacket restfulData =  restfulHandlePacket(rxDataSerial, &byteCount, trips);
+        restfulPacket restfulData =  restfulHandlePacket(rxDataSer, &byteCountSer, trips);
         for (int i = 0; i < restfulData.responseLen; ++i)
         {
             Serial.print(restfulData.response[i]);
         }
-        byteCount=0;
-        commandFinished = 0;
+        byteCountSer=0;
+        commandFinishedSer = 0;
         Serial.println();
     }
-    
+
     delay(5);          // Short delay to avoid overloading the processor
 }
 
