@@ -2,27 +2,49 @@
 #define RESTFUL_H
 #include "config.h"
 #include "data.h"
+#include <cstdio>
 
-#define RESTFUL_MAIN_VIEW "/"
-#define RESTFUL_TRIPS_VIEW "/trips"
-#define RESTFUL_INDIVIDUAL_TRIP_VIEW "/trips/0"
+#define MAX_RESTFUL_RESPONSE_SIZE 1024 
 
-#ifndef ESP32_WROOM_32
-#define RESTFUL_TRIPS_VIEW_GEOLOCATION "/trips/x/geolocation"
-#endif
+// Path: /
+#define RESTFUL_MAIN_VIEW_PATH "/"
+#define RESTFUL_MAIN_VIEW "{\
+\"Context\":\"/\", \
+\"Description\":\"List of paths of different functionalities\",\
+\"Paths\":[{\"Path\":\"/trips\",\"Description\":\"List of different trips and their paths.\"}]\
+}"
 
-#define FIXED_ADDRESSES { \
-                    RESTFUL_MAIN_VIEW, \
-                    RESTFUL_TRIPS_VIEW \
-                    }
-#define FIXED_ADDRESSES_COUNT 2
+// Path: /trips
+#define RESTFUL_TRIPS_VIEW_PATH "/trips"
+#define RESTFUL_TRIPS_VIEW "{\
+\"Context\":\"/trips\",\
+\"Description\":\"List of different trips and their paths.\",\
+\"Paths\":[%s]\
+}"
+#define RESTFUL_TRIPS_VIEW_PATHS_LIST_ENTRY "\"/trips/%i\""
 
+// Path: /trips/%i
+#define RESTFUL_ONE_TRIP_VIEW_PATH "/trips/%i"
+#define RESTFUL_ONE_TRIP_VIEW "{\
+\"Context\":\"/trips/%i\",\
+\"Description\":\"Individual trip data overview.\",\
+\"ID\":%i,\
+\"StartTimestamp\":\"%d\",\
+\"EndTimestamp\":\"%d\",\
+\"Steps\":%i,\
+\"AvgSpeed\":\"%d\",\
+\"GeoLocationPath\":null\
+}"
 
-typedef struct {
-    char * address;
-    char ** otherAddresses;
-    int dataCount;
-} restfulAddressView;
+// Path: /trips/%i/GeoData
+#define RESTFUL_GEODATA_VIEW_PATH "/trips/%i/GeoData"
+
+// Path: /error
+#define RESTFUL_ERROR_PATH "/error"
+#define RESTFUL_ERROR_VIEW "{\
+\"Context\":\"error\",\
+\"Description\":\"Unable to respond to request.\"\
+}"
 
 enum restfulTripStatus{
     SYNCED,
@@ -54,15 +76,12 @@ typedef struct {
     int addressLen;
     char postData[32];
     int postDataLen;
-    char *response;
+    char response[MAX_RESTFUL_RESPONSE_SIZE];
     int responseLen;
     httpType type;
 } restfulPacket;
 
-
-int initRestful(tripData *trips, int size);
-
-restfulPacket restfulHandlePacket(char *data, const int *dataLen);
+restfulPacket restfulHandlePacket(char *data, const int *dataLen, tripData *trips);
 
 
 

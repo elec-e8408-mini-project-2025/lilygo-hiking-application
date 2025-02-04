@@ -1,40 +1,5 @@
 #include "restful.h"
 
-restfulAddressView mainView;
-
-restfulAddressView tripsView;
-
-int initRestful(tripData *trips, int size)
-{
-    mainView.address = RESTFUL_MAIN_VIEW;
-    char *fixedAddresses[] = FIXED_ADDRESSES;
-    mainView.otherAddresses = fixedAddresses;
-    mainView.dataCount = FIXED_ADDRESSES_COUNT;
-
-    char tripAddressesTmp[MAX_CACHED_TRIPS][sizeof(RESTFUL_INDIVIDUAL_TRIP_VIEW)];
-    char sampleTripAddress[] = RESTFUL_INDIVIDUAL_TRIP_VIEW; 
-    for (int i = 0; i < MAX_CACHED_TRIPS; ++i)
-    {
-        for (int i2 = 0; i2 < sizeof(RESTFUL_INDIVIDUAL_TRIP_VIEW); ++i2)
-        {
-            tripAddressesTmp[i][i2] = sampleTripAddress[i2];
-        }
-        tripAddressesTmp[i][sizeof(RESTFUL_INDIVIDUAL_TRIP_VIEW) - 2] = (char) i + 48; 
-    }
-    
-    char *tripAddresses[MAX_CACHED_TRIPS];
-    char **tripAddressesPointer = tripAddresses;
-    for (int i = 0; i < MAX_CACHED_TRIPS; ++i)
-    {
-        tripAddresses[i] = tripAddressesTmp[i];
-    }
-    tripsView.otherAddresses = tripAddressesPointer;
-    tripsView.address = RESTFUL_TRIPS_VIEW;
-    tripsView.dataCount = MAX_CACHED_TRIPS;
-    return 0;
-}
-
-
 httpType restfulParseType(const char* data, const int *dataLen)
 {
     httpType ret;
@@ -90,8 +55,81 @@ int parseRestfulPacket(restfulPacket * packet, char * data, const int * dataLen)
     return 0;
 }
 
+int setResponseError(restfulPacket * packet)
+{
+    packet->responseLen = sprintf(packet->response, "%s", RESTFUL_ERROR_VIEW);
+    return 0;
+}
 
-restfulPacket restfulHandlePacket(char *data, const int *dataLen)
+int setResponseMainView(restfulPacket * packet)
+{
+    packet->responseLen = sprintf(packet->response, "%s", RESTFUL_MAIN_VIEW);
+    return 0;
+}
+
+int setResponseTrips(restfulPacket * packet)
+{
+    char msgArray[sizeof(RESTFUL_TRIPS_VIEW_PATHS_LIST_ENTRY) * MAX_CACHED_TRIPS];
+    char *p = &msgArray[0];
+    for (int i = 0; i < MAX_CACHED_TRIPS; ++i)
+    {
+        if (i != 0)
+        {
+            p[0] = ',';
+            ++p; 
+        }
+        int offset = sprintf(p, RESTFUL_TRIPS_VIEW_PATHS_LIST_ENTRY, i);
+        p+=offset;
+    }
+    packet->responseLen = sprintf(packet->response, RESTFUL_TRIPS_VIEW, msgArray);
+    return 0;
+}
+
+int setResponseOneTrip(restfulPacket * packet, tripData *trips)
+{
+    int tripId = packet->addressData[packet->addressLen - 1] - '0';
+    tripData trip = trips[tripId];
+    packet->responseLen = sprintf(packet->response, RESTFUL_ONE_TRIP_VIEW, trip.tripID, trip.timestampStart, trip.timestampStop, trip.stepCount, trip.avgSpeed);
+    return 0;
+}
+
+int getAddressContent(restfulPacket * packet, tripData *trips)
+{
+    if (packet->type == RESTFUL_ERROR)
+    {
+        setResponseError(packet);
+        return 0;
+    }
+
+    switch(packet->addressLen)
+    {
+        case sizeof(RESTFUL_MAIN_VIEW_PATH) - 1:
+            setResponseMainView(packet);
+            break;
+        
+        case sizeof(RESTFUL_TRIPS_VIEW_PATH) - 1:
+            setResponseTrips(packet);
+            break;
+        
+        case sizeof(RESTFUL_ONE_TRIP_VIEW_PATH) - 2:
+            setResponseOneTrip(packet, trips);
+            break;
+
+        default:
+            break;
+    }
+
+    
+    return 0;
+}
+
+int postAddressContent(restfulPacket * packet, tripData *trips)
+{
+    packet->type = RESTFUL_ERROR; // NOT YET IMPLEMENTED
+    return 0;
+}
+
+restfulPacket restfulHandlePacket(char *data, const int *dataLen, tripData *trips)
 {
     restfulPacket ret = {
         0,
@@ -102,14 +140,16 @@ restfulPacket restfulHandlePacket(char *data, const int *dataLen)
         0,
         RESTFUL_ERROR
     };
-    
+
     parseRestfulPacket(&ret, data, dataLen);
 
     switch (ret.type)
     {
         case RESTFUL_GET:
+            getAddressContent(&ret, trips);
             break;
         case RESTFUL_POST:
+            postAddressContent(&ret, trips);
             break;
         default:
             break;
