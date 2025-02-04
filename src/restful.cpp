@@ -116,6 +116,7 @@ int getAddressContent(restfulPacket * packet, tripData *trips)
             break;
 
         default:
+            setResponseError(packet);
             break;
     }
 
@@ -152,6 +153,7 @@ restfulPacket restfulHandlePacket(char *data, const int *dataLen, tripData *trip
             postAddressContent(&ret, trips);
             break;
         default:
+            setResponseError(&ret);
             break;
     }
 

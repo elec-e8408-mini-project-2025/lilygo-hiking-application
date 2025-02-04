@@ -5,6 +5,7 @@
 #include <cstdio>
 
 #define MAX_RESTFUL_RESPONSE_SIZE 1024 
+#define MAX_RESTFUL_REQUEST_SIZE MAX_RESTFUL_RESPONSE_SIZE/4
 
 // Path: /
 #define RESTFUL_MAIN_VIEW_PATH "/"
