@@ -12,33 +12,33 @@
 #define RESTFUL_MAIN_VIEW "{\
 \"Context\":\"/\", \
 \"Description\":\"List of paths of different functionalities\",\
-\"Paths\":[{\"Path\":\"/trips\",\"Description\":\"List of different trips and their paths.\"}, {\"Path\":\"/error\",\"Description\":\"General error information.\"}]\
+\"Paths\":[{\"Path\":\"/tripdata\",\"Description\":\"List of different trips and their paths.\"}, {\"Path\":\"/error\",\"Description\":\"General error information.\"}]\
 }\n"
 
 // Path: /trips
-#define RESTFUL_TRIPS_VIEW_PATH "/trips"
+#define RESTFUL_TRIPS_VIEW_PATH "/tripdata"
 #define RESTFUL_TRIPS_VIEW "{\
-\"Context\":\"/trips\",\
+\"Context\":\"/tripdata\",\
 \"Description\":\"List of different trips and their paths.\",\
 \"Paths\":[%s]\
 }\n"
-#define RESTFUL_TRIPS_VIEW_PATHS_LIST_ENTRY "\"/trips/%i\""
+#define RESTFUL_TRIPS_VIEW_PATHS_LIST_ENTRY "\"/tripdata/%i\""
 
 // Path: /trips/%i
-#define RESTFUL_ONE_TRIP_VIEW_PATH "/trips/%i"
+#define RESTFUL_ONE_TRIP_VIEW_PATH "/tripdata/%i"
 #define RESTFUL_ONE_TRIP_VIEW "{\
-\"Context\":\"/trips/%i\",\
+\"Context\":\"/tripdata/%i\",\
 \"Description\":\"Individual trip data overview.\",\
 \"ID\":%i,\
 \"StartTimestamp\":\"%d\",\
 \"EndTimestamp\":\"%d\",\
 \"Steps\":%i,\
-\"AvgSpeed\":\"%d\",\
+\"AvgSpeed\":\"%f\",\
 \"GeoLocationPath\":null\
 }\n"
 
-// Path: /trips/%i/GeoData
-#define RESTFUL_GEODATA_VIEW_PATH "/trips/%i/GeoData"
+// Path: /tripdata/%i/GeoData
+#define RESTFUL_GEODATA_VIEW_PATH "/tripdata/%i/GeoData"
 
 // Path: /error
 #define RESTFUL_ERROR_PATH "/error"
