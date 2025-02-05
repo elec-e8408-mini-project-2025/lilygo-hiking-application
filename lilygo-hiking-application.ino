@@ -2,6 +2,7 @@
 #include "./src/data.h"
 #include "./src/restful.h"
 #include "./src/bluetooth.h"
+#include "./src/serial.h"
 #include "./src/net.h"
 #ifndef ESP32_WROOM_32
 #include "./src/interface.h"
@@ -17,18 +18,6 @@ tripData trips[] = {
         {4,0,0,0,0},    
 };
 
-
-// Serial debugging interface (Global Variables)
-bool commandFinishedSer = 0;
-int byteCountSer = 0;
-char rxDataSer[MAX_RESTFUL_REQUEST_SIZE]; 
-
-
-// Bluetooth (Global variables)
-bool commandFinishedBT = 0;
-int byteCountBT = 0;
-char rxDataBT[MAX_RESTFUL_REQUEST_SIZE]; 
-
 void setup() {
     // Touch Screen interface
     #ifndef ESP32_WROOM_32
@@ -39,7 +28,7 @@ void setup() {
     initBluetooth();
 
     // Serial debugging interface
-    Serial.begin(115200);
+    initSerial();
 }
 
 void loop() {
@@ -50,35 +39,17 @@ void loop() {
     #endif
    
     // Serial debugging interface
-    if (Serial.available() > 0) {
-        rxDataSer[byteCountSer] = Serial.read();
-        Serial.print(rxDataSer[byteCountSer]);
-        if(rxDataSer[byteCountSer] == 13)
-        {
-            Serial.println();
-            commandFinishedSer = 1;
-        }
-        else
-        {
-            ++byteCountSer;
-            if (byteCountSer == MAX_RESTFUL_REQUEST_SIZE)
-            {
-                byteCountSer = 0;
-                commandFinishedSer = 0;
-            }
-        }
-    }
-    if(commandFinishedSer)
+    serialBuffer serialData = handleSerialByte();
+    if (serialData.status == SER_READY)
     {
-        restfulPacket restfulData =  restfulHandlePacket(rxDataSer, &byteCountSer, trips);
-        for (int i = 0; i < restfulData.responseLen; ++i)
-        {
-            Serial.print(restfulData.response[i]);
-        }
-        byteCountSer=0;
-        commandFinishedSer = 0;
-        Serial.println();
+        restfulPacket restfulData =  restfulHandlePacket(serialData.buf, &serialData.bufLen, trips);
+        writeSerial(restfulData.response, restfulData.responseLen);
     }
+
+
+    // Bluetooth interface
+
+
 
     delay(5);          // Short delay to avoid overloading the processor
 }

@@ -2,6 +2,8 @@
 #define BLUETOOTH_H
 #include "BluetoothSerial.h"
 
+#define BLUETOOTH_BUFFER_SIZE 256
+
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
   #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif

@@ -84,27 +84,4 @@ typedef struct {
 
 restfulPacket restfulHandlePacket(char *data, const int *dataLen, tripData *trips);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif
