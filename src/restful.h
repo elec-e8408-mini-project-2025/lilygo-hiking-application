@@ -12,7 +12,7 @@
 #define RESTFUL_MAIN_VIEW "{\
 \"Context\":\"/\", \
 \"Description\":\"List of paths of different functionalities\",\
-\"Paths\":[{\"Path\":\"/trips\",\"Description\":\"List of different trips and their paths.\"}]\
+\"Paths\":[{\"Path\":\"/trips\",\"Description\":\"List of different trips and their paths.\"}, {\"Path\":\"/error\",\"Description\":\"General error information.\"}]\
 }\n"
 
 // Path: /trips
