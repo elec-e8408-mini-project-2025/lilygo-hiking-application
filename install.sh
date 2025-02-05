@@ -82,6 +82,7 @@ check_arduino_cli_esp32()
         if [[ $REPLY == "y" ]]; then 
             $ARDUINO_CLI_BIN core update-index --config-file arduino-cli.yaml
             $ARDUINO_CLI_BIN core install esp32:esp32@2.0.14
+            python3 -m pip install pyserial
             
         else
             echo -e "$ERROR: Please run the commands: "

@@ -3,3 +3,4 @@ build/
 *.log
 tmp/
 build/
+arduino-cli
