@@ -14,14 +14,25 @@
 
 #define DEVICE_NAME "HIKING_WATCH"
 
+typedef enum {
+    BT_READY,
+    BT_NOT_READY,
+    BT_ERROR
+} bluetoothStatus;
+
+typedef struct {
+    char * buf;
+    int bufLen;
+    bluetoothStatus status;
+} bluetoothBuffer;
 
 void initBluetooth();
 
 
-void handleBluetooth();
+bluetoothBuffer handleBluetoothByte();
 
 
-
+void writeBluetooth(char * data, int dataLen);
 
 
 

@@ -37,18 +37,24 @@ void loop() {
     #ifndef ESP32_WROOM_32
     handleTasksInterface();
     #endif
-   
+    
+    restfulPacket restfulData;
     // Serial debugging interface
     serialBuffer serialData = handleSerialByte();
     if (serialData.status == SER_READY)
     {
-        restfulPacket restfulData =  restfulHandlePacket(serialData.buf, &serialData.bufLen, trips);
+        restfulData =  restfulHandlePacket(serialData.buf, &serialData.bufLen, trips);
         writeSerial(restfulData.response, restfulData.responseLen);
     }
 
 
     // Bluetooth interface
-
+    bluetoothBuffer bluetoothData = handleBluetoothByte();
+    if (bluetoothData.status == BT_READY)
+    {
+        restfulData =  restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
+        writeBluetooth(restfulData.response, restfulData.responseLen);
+    }
 
 
     delay(5);          // Short delay to avoid overloading the processor

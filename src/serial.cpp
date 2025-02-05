@@ -21,9 +21,8 @@ serialBuffer handleSerialByte()
     if (Serial.available() > 0) {
         rxDataSer[byteCountSer] = Serial.read();
         Serial.print(rxDataSer[byteCountSer]);
-        if(rxDataSer[byteCountSer] == 13)
+        if(rxDataSer[byteCountSer] < 32)
         {
-            Serial.println();
             commandFinishedSer = 1;
         }
         else
@@ -41,7 +40,10 @@ serialBuffer handleSerialByte()
         // restfulPacket restfulData =  restfulHandlePacket(rxDataSer, &byteCountSer, trips);
         ret.buf = rxDataSer;
         ret.bufLen = byteCountSer;
-        ret.status = SER_READY;
+        if(ret.bufLen)
+        {
+            ret.status = SER_READY;
+        }
         byteCountSer=0;
         commandFinishedSer = 0;
 

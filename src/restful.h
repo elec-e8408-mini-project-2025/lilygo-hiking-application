@@ -13,7 +13,7 @@
 \"Context\":\"/\", \
 \"Description\":\"List of paths of different functionalities\",\
 \"Paths\":[{\"Path\":\"/trips\",\"Description\":\"List of different trips and their paths.\"}]\
-}"
+}\n"
 
 // Path: /trips
 #define RESTFUL_TRIPS_VIEW_PATH "/trips"
@@ -21,7 +21,7 @@
 \"Context\":\"/trips\",\
 \"Description\":\"List of different trips and their paths.\",\
 \"Paths\":[%s]\
-}"
+}\n"
 #define RESTFUL_TRIPS_VIEW_PATHS_LIST_ENTRY "\"/trips/%i\""
 
 // Path: /trips/%i
@@ -35,7 +35,7 @@
 \"Steps\":%i,\
 \"AvgSpeed\":\"%d\",\
 \"GeoLocationPath\":null\
-}"
+}\n"
 
 // Path: /trips/%i/GeoData
 #define RESTFUL_GEODATA_VIEW_PATH "/trips/%i/GeoData"
@@ -43,9 +43,9 @@
 // Path: /error
 #define RESTFUL_ERROR_PATH "/error"
 #define RESTFUL_ERROR_VIEW "{\
-\"Context\":\"error\",\
+\"Context\":\"/error\",\
 \"Description\":\"Unable to respond to request.\"\
-}"
+}\n"
 
 enum restfulTripStatus{
     SYNCED,
