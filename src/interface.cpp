@@ -29,29 +29,34 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
     // ref: https://docs.lvgl.io/8/overview/event.html?highlight=lv_event_clicked#events
     if (event == LV_EVENT_CLICKED)
     {
-        Serial.println("Button clicked");
+        Serial.print("Button clicked: ");
 
         if (obj == settings_btn)
         {
+            Serial.println("Settings");
             lv_scr_load(settings_view); // Load the settings view
         }
         else if (obj == session_btn)
         {
+            Serial.println("Session");
             lv_obj_clean(session_view);
             createSessionView();
             lv_scr_load(session_view); // Load the session view
         }
         else if (obj == past_sessions_btn)
         {
+            Serial.println("Past Sessions");
             lv_scr_load(past_sessions_view); // load past sessions view
         }
         // TODO: This could perhaps be done more nicely?
         else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
         {
+            Serial.println("Main view");
             lv_scr_load(main_view); // load main menu view
         }
         else if (obj == toggle_session_btn)
         {
+            Serial.println("Toggle Session");
             if (!hasActiveSession)
             {
                 // Empty step count to prevent screen from rendering old count before reset
