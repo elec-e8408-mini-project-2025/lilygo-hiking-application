@@ -61,6 +61,5 @@ void loop()
     }
 
     // Short delay to avoid overloading the processor
-    // Note: low delay may cause issues with toggle button - action
-    delay(20);
+    delay(5);
 }
