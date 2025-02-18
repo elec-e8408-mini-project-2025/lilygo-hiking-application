@@ -57,5 +57,7 @@ void loop()
         writeBluetooth(restfulData.response, restfulData.responseLen);
     }
 
-    delay(5); // Short delay to avoid overloading the processor
+    // Short delay to avoid overloading the processor
+    // Note: low delay may cause issues with toggle button - action
+    delay(20);
 }
