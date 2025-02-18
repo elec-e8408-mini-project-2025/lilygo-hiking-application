@@ -1,20 +1,10 @@
 #ifndef ESP32_WROOM_32
 #include "interface.h"
-
-TTGOClass *ttgo;
+#include "globals.h"
 
 // For toggling display state
 bool displayOn = true;
 bool irqPEK = false;
-
-// Step counter values
-// TODO: These should come from step counter module
-uint32_t stepCount = 0;
-const float step_length = 0.8;
-float avgSpeed = 0.0;
-// Becomes true when start button is pressed in session view
-// Becomes false when stop button is pressed in session view
-bool hasActiveSession = false;
 
 /*
  * Declare global variables for buttons and views

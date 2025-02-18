@@ -6,6 +6,7 @@
 #include "./src/net.h"
 #ifndef ESP32_WROOM_32
 #include "./src/interface.h"
+#include "./src/accelerator.h"
 #include "./src/step.h"
 #endif
 
@@ -23,6 +24,7 @@ void setup()
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
     initInterface();
+    initAccelerator();
 #endif
 
     // Bluetooth interface
@@ -38,6 +40,7 @@ void loop()
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
     handleTasksInterface();
+    handleTasksAccelerator();
 #endif
 
     restfulPacket restfulData;
