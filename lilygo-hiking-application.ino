@@ -11,18 +11,19 @@
 
 // System data (Global Variables)
 tripData trips[] = {
-        {0,0,0,0,0},
-        {1,0,0,0,0},
-        {2,0,0,0,0},
-        {3,0,0,0,0},
-        {4,0,0,0,0},    
+    {0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0},
+    {2, 0, 0, 0, 0},
+    {3, 0, 0, 0, 0},
+    {4, 0, 0, 0, 0},
 };
 
-void setup() {
-    // Touch Screen interface
-    #ifndef ESP32_WROOM_32
+void setup()
+{
+// Touch Screen interface
+#ifndef ESP32_WROOM_32
     initInterface();
-    #endif
+#endif
 
     // Bluetooth interface
     initBluetooth();
@@ -31,32 +32,30 @@ void setup() {
     initSerial();
 }
 
-void loop() {
-    
-    // Touch Screen interface
-    #ifndef ESP32_WROOM_32
+void loop()
+{
+
+// Touch Screen interface
+#ifndef ESP32_WROOM_32
     handleTasksInterface();
-    #endif
-    
+#endif
+
     restfulPacket restfulData;
     // Serial debugging interface
     serialBuffer serialData = handleSerialByte();
     if (serialData.status == SER_READY)
     {
-        restfulData =  restfulHandlePacket(serialData.buf, &serialData.bufLen, trips);
+        restfulData = restfulHandlePacket(serialData.buf, &serialData.bufLen, trips);
         writeSerial(restfulData.response, restfulData.responseLen);
     }
-
 
     // Bluetooth interface
     bluetoothBuffer bluetoothData = handleBluetoothByte();
     if (bluetoothData.status == BT_READY)
     {
-        restfulData =  restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
+        restfulData = restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
         writeBluetooth(restfulData.response, restfulData.responseLen);
     }
 
-
-    delay(5);          // Short delay to avoid overloading the processor
+    delay(5); // Short delay to avoid overloading the processor
 }
-
