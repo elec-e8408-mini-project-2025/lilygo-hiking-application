@@ -122,7 +122,7 @@ uint32_t handleTasksAccelerator()
 
 void resetAccelerator()
 {
-    // this will reset the accelerator
+    sensor->resetStepCounter();
 }
 
 #endif
