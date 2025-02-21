@@ -7,6 +7,7 @@ void initAccelerator(TTGOClass *ttgo);
 
 uint32_t handleTasksAccelerator();
 
+void resetAccelerator();
 
 
 #endif

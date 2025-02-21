@@ -56,6 +56,7 @@ void loop()
             {
                 ++systemVariables.currentTrip;
                 systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
+                resetAccelerator();
             }
             systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
             break;

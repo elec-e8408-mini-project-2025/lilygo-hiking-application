@@ -120,4 +120,9 @@ uint32_t handleTasksAccelerator()
     // Serial.println("loopAccelerator.END");
 }
 
+void resetAccelerator()
+{
+    // this will reset the accelerator
+}
+
 #endif
