@@ -73,7 +73,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             if (!hasActiveSession)
             {
                 // Empty step count to prevent screen from rendering old count before reset
-                stepCount = 0;
+                // stepCount = 0;
                 // Reset counter
                 // TODO: Bring this from sensor module
                 // sensor->resetStepCounter();
@@ -436,10 +436,14 @@ void initInterface(TTGOClass *ttgo)
 
 interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables)
 {
+    returnData.serialString = "";
+    returnData.event = INTERFACE_IDLE;
+    
     stepCount = trip->stepCount;
     avgSpeed = trip->avgSpeed;
     step_length = systemVariables->step_length;
-    
+
+    lv_task_handler(); // Handle LVGL tasks
     
     // toggle display on/off
     loopWakeUpFormTouchScreen(ttgo);
@@ -447,7 +451,11 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     // refresh session view
     refreshSessionView();
 
-    lv_task_handler(); // Handle LVGL tasks
+    
+
+    // char steps[32]; // Ensure the buffer is large enough
+    // sprintf(steps, "%u", stepCount);
+    // Serial.println(steps)
 
     return returnData;
 }

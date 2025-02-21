@@ -5,6 +5,9 @@
 TFT_eSPI *tft;
 BMA *sensor;
 bool irqAcc = false;
+
+uint32_t currentSteps = 0;
+
 /*
  * Sets up accelerator
  * Code taken from TTGO example stepCount
@@ -91,7 +94,6 @@ void initAccelerator(TTGOClass *ttgo)
  */
 uint32_t handleTasksAccelerator()
 {
-    uint32_t currentSteps = 0;
 
     // Serial.println("loopAccelerator.BEGIN");
     if (irqAcc)
