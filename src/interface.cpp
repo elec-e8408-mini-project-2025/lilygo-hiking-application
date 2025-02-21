@@ -326,7 +326,7 @@ void init_global_styles()
  * PEK button used to turn touch screen on and off
  * applied based on TTGO example WakeUpFormTouchScreen
  */
-void loopWakeUpFormTouchScreen()
+void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
 {
     // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
     if (irqPEK)
@@ -375,7 +375,7 @@ void loopWakeUpFormTouchScreen()
  * Sets up toggle screen ON/OFF
  * Code taken from TTGO example WakeUpFormTouchScreen
  */
-void setupToggleScreen()
+void setupToggleScreen(TTGOClass *ttgo)
 {
     Serial.println("setupToggleScreen.BEGIN");
     pinMode(AXP202_INT, INPUT_PULLUP);
@@ -389,13 +389,13 @@ void setupToggleScreen()
     Serial.println("setupToggleScreen.END");
 }
 
-void initInterface()
+void initInterface(TTGOClass *ttgo)
 {
 
     Serial.println("setup.BEGIN");
 
     // ref: https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/examples/LVGL/Lvgl_Button/Lvgl_Button.ino#L18
-    ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
+    // ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
     ttgo->begin();                // Initialize TTGO smartwatch hardware
     ttgo->openBL();               // Turn on the blacklight of the TTGO smartwatch display
     ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch
@@ -407,7 +407,7 @@ void initInterface()
     init_global_styles();
 
     // Setup touch screen on and off toggling
-    setupToggleScreen();
+    setupToggleScreen(ttgo);
 
     // Initialize views
     createMainMenuView();
@@ -421,10 +421,10 @@ void initInterface()
     Serial.println("setup.END");
 }
 
-void handleTasksInterface()
+void handleTasksInterface(TTGOClass *ttgo)
 {
     // toggle display on/off
-    loopWakeUpFormTouchScreen();
+    loopWakeUpFormTouchScreen(ttgo);
 
     // refresh session view
     refreshSessionView();

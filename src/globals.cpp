@@ -1,8 +1,6 @@
 #ifndef ESP32_WROOM_32
 #include "globals.h"
 
-TTGOClass *ttgo;
-
 // Step counter
 TFT_eSPI *tft;
 BMA *sensor;

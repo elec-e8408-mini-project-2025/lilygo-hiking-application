@@ -2,8 +2,6 @@
 #define GLOBALS_H
 #include <LilyGoWatch.h>
 
-extern TTGOClass *ttgo;
-
 extern TFT_eSPI *tft;
 extern BMA *sensor;
 extern bool irqAcc;

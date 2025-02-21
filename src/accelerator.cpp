@@ -6,7 +6,7 @@
  * Sets up accelerator
  * Code taken from TTGO example stepCount
  */
-void initAccelerator()
+void initAccelerator(TTGOClass *ttgo)
 {
     Serial.println("setupAccelerator.BEGIN");
     sensor = ttgo->bma;

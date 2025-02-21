@@ -10,6 +10,9 @@
 #include "./src/step.h"
 #endif
 
+TTGOClass *ttgo;
+
+
 // System data (Global Variables)
 tripData trips[] = {
     {0, 0, 0, 0, 0},
@@ -21,10 +24,11 @@ tripData trips[] = {
 
 void setup()
 {
+  ttgo = TTGOClass::getWatch();
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
-    initInterface();
-    initAccelerator();
+    initInterface(ttgo);
+    initAccelerator(ttgo);
 #endif
 
     // Bluetooth interface
@@ -39,7 +43,7 @@ void loop()
 
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
-    handleTasksInterface();
+    handleTasksInterface(ttgo);
     handleTasksAccelerator();
 #endif
 

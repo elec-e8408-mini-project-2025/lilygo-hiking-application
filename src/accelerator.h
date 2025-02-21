@@ -2,7 +2,7 @@
 #define ACCELERATOR_H
 #include <LilyGoWatch.h>
 
-void initAccelerator();
+void initAccelerator(TTGOClass *ttgo);
 
 void handleTasksAccelerator();
 

@@ -11,8 +11,8 @@ void createSettingsView();
 
 void createPastSessionsView();
 
-void initInterface();
+void initInterface(TTGOClass *ttgo);
 
-void handleTasksInterface();
+void handleTasksInterface(TTGOClass *ttgo);
 
 #endif
