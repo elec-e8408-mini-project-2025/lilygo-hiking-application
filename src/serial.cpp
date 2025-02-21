@@ -51,6 +51,10 @@ serialBuffer handleSerialByte()
     return ret;
 };
 
+void writeSerialString(char * data)
+{
+    Serial.println(data);
+}
 
 void writeSerial(char * data, int dataLen)
 {

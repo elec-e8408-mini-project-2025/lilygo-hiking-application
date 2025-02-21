@@ -119,6 +119,7 @@ check_usb()
 
 compile_app()
 {
+    echo -e "$INFO Compiling application. This may take awhile"
     case "$DEVICE" in
         ESP32_WROOM_32)
             FQBN="esp32:esp32:esp32-poe-iso"
