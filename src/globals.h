@@ -1,15 +1,17 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
-#include <LilyGoWatch.h>
 
-extern TFT_eSPI *tft;
-extern BMA *sensor;
-extern bool irqAcc;
+/////////////////////// MOVED TO CORRESPONDING LIBRARIES
+// #include <LilyGoWatch.h>
 
-extern uint32_t stepCount;
-extern const float step_length;
-extern float avgSpeed;
+// extern TFT_eSPI *tft;
+// extern BMA *sensor;
+// extern bool irqAcc;
 
-extern bool hasActiveSession;
+// extern uint32_t stepCount;
+// extern const float step_length;
+// extern float avgSpeed;
+
+// extern bool hasActiveSession;
 
 #endif

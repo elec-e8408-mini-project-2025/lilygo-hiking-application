@@ -1,6 +1,6 @@
 #ifndef DATA_H
 #define DATA_H
-
+#include <stdint.h>
 #define GEO_MAX_SIZE 16
 
 typedef struct {
@@ -14,12 +14,17 @@ typedef struct {
     int tripID;
     unsigned long timestampStart;
     unsigned long timestampStop;
-    unsigned long stepCount;
+    uint32_t stepCount;
     float avgSpeed;
     //geoData tripGeoData;
 } tripData;
 
-
+typedef struct {
+    float step_length;
+    int currentTrip;
+    int maxTrips;
+    bool hasActiveSession;
+} systemGlobals;
 
 
 

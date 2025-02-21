@@ -1,14 +1,17 @@
 #ifndef ESP32_WROOM_32
 #include "accelerator.h"
-#include "globals.h"
+//#include "globals.h"
 
+TFT_eSPI *tft;
+BMA *sensor;
+bool irqAcc = false;
 /*
  * Sets up accelerator
  * Code taken from TTGO example stepCount
  */
 void initAccelerator(TTGOClass *ttgo)
 {
-    Serial.println("setupAccelerator.BEGIN");
+    //Serial.println("setupAccelerator.BEGIN");
     sensor = ttgo->bma;
 
     // Accel parameter structure
@@ -79,20 +82,21 @@ void initAccelerator(TTGOClass *ttgo)
 
     // Turn on step interrupt
     sensor->enableStepCountInterrupt();
-    Serial.println("setupAccelerator.END");
+    //Serial.println("setupAccelerator.END");
 }
 
 /*
  * loop handler for accelerator
  * Code taken from TTGO example stepCount
  */
-void handleTasksAccelerator()
+uint32_t handleTasksAccelerator()
 {
+    uint32_t currentSteps = 0;
 
     // Serial.println("loopAccelerator.BEGIN");
-    if (irqAcc && hasActiveSession)
+    if (irqAcc)
     {
-        Serial.println("Accelerator interrupt");
+        //Serial.println("Accelerator interrupt");
         irqAcc = 0;
         bool rlst;
         do
@@ -106,12 +110,13 @@ void handleTasksAccelerator()
         if (sensor->isStepCounter())
         {
             // Get step data from register
-            stepCount = sensor->getCounter();
+            currentSteps = sensor->getCounter();
         }
         // Print step count to serial
-        Serial.print("Step Count: ");
-        Serial.println(stepCount);
+        //Serial.print("Step Count: ");
+        //Serial.println(stepCount);
     }
+    return currentSteps;
     // Serial.println("loopAccelerator.END");
 }
 

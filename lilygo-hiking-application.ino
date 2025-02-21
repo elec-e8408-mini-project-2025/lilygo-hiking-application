@@ -8,9 +8,8 @@
 #include "./src/interface.h"
 #include "./src/accelerator.h"
 #include "./src/step.h"
-#endif
-
 TTGOClass *ttgo;
+#endif
 
 
 // System data (Global Variables)
@@ -22,11 +21,15 @@ tripData trips[] = {
     {4, 0, 0, 0, 0},
 };
 
+
+systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false};
+
 void setup()
 {
-  ttgo = TTGOClass::getWatch();
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
+    ttgo = TTGOClass::getWatch();
+    ttgo->begin();
     initInterface(ttgo);
     initAccelerator(ttgo);
 #endif
@@ -43,8 +46,27 @@ void loop()
 
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
-    handleTasksInterface(ttgo);
-    handleTasksAccelerator();
+    interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables);
+    writeSerialString(interfaceEvent.serialString);
+    switch (interfaceEvent.event)
+    {
+        case INTERFACE_TOGGLE_SESSION:
+            // stopping session
+            if (systemVariables.hasActiveSession)
+            {
+                ++systemVariables.currentTrip;
+                systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
+            }
+            systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
+            break;
+        default:
+            writeSerialString("INTERFACE EVENT: not implemented");
+            break;
+    }
+    if (systemVariables.hasActiveSession)
+    {
+        trips[systemVariables.currentTrip].stepCount =  handleTasksAccelerator();
+    }
 #endif
 
     restfulPacket restfulData;

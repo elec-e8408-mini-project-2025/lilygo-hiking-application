@@ -1,10 +1,17 @@
 #ifndef ESP32_WROOM_32
 #include "interface.h"
-#include "globals.h"
+// #include "globals.h"
 
 // For toggling display state
 bool displayOn = true;
 bool irqPEK = false;
+
+uint32_t stepCount = 0;
+float step_length = 0.8;
+float avgSpeed = 0.0;
+bool hasActiveSession = false;
+
+interfaceEvent returnData = {INTERFACE_IDLE, ""};
 
 /*
  * Declare global variables for buttons and views
@@ -29,34 +36,40 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
     // ref: https://docs.lvgl.io/8/overview/event.html?highlight=lv_event_clicked#events
     if (event == LV_EVENT_CLICKED)
     {
-        Serial.print("Button clicked: ");
+        //Serial.print("Button clicked: ");returnData
 
         if (obj == settings_btn)
         {
-            Serial.println("Settings");
+            //Serial.println("Settings");
+            returnData.serialString = "Settings";
             lv_scr_load(settings_view); // Load the settings view
         }
         else if (obj == session_btn)
         {
-            Serial.println("Session");
+            //Serial.println("Session");
+            returnData.serialString = "Session";
             lv_obj_clean(session_view);
             createSessionView();
             lv_scr_load(session_view); // Load the session view
         }
         else if (obj == past_sessions_btn)
         {
-            Serial.println("Past Sessions");
+            //Serial.println("Past Sessions");
+            returnData.serialString = "Past Sessions";
             lv_scr_load(past_sessions_view); // load past sessions view
         }
         // TODO: This could perhaps be done more nicely?
         else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
         {
-            Serial.println("Main view");
+            //Serial.println("Main view");
+            returnData.serialString = "Main view";
             lv_scr_load(main_view); // load main menu view
         }
         else if (obj == toggle_session_btn)
         {
-            Serial.println("Toggle Session");
+            returnData.serialString = "Toggle Session";
+            returnData.event = INTERFACE_TOGGLE_SESSION;
+            //Serial.println("Toggle Session");
             if (!hasActiveSession)
             {
                 // Empty step count to prevent screen from rendering old count before reset
@@ -331,7 +344,7 @@ void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
     // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
     if (irqPEK)
     {
-        Serial.println("PEK pressed");
+        //Serial.println("PEK pressed");
         irqPEK = false;
         ttgo->power->readIRQ();
 
@@ -351,14 +364,14 @@ void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
                 // Turn touchscreen off
                 ttgo->displaySleep();
                 ttgo->power->setPowerOutPut(AXP202_LDO2, false);
-                Serial.println("Touchscreen turned off");
+                //Serial.println("Touchscreen turned off");
             }
             else
             {
                 // Turn touchscreen back on
                 ttgo->displayWakeup();
                 ttgo->power->setPowerOutPut(AXP202_LDO2, true);
-                Serial.println("Touchscreen turned on");
+                //Serial.println("Touchscreen turned on");
             }
 
             // Toggle display state
@@ -377,7 +390,7 @@ void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
  */
 void setupToggleScreen(TTGOClass *ttgo)
 {
-    Serial.println("setupToggleScreen.BEGIN");
+    //Serial.println("setupToggleScreen.BEGIN");
     pinMode(AXP202_INT, INPUT_PULLUP);
     attachInterrupt(AXP202_INT, []
                     { irqPEK = true; }, FALLING);
@@ -386,23 +399,23 @@ void setupToggleScreen(TTGOClass *ttgo)
     ttgo->power->clearIRQ();
 
     pinMode(TOUCH_INT, INPUT);
-    Serial.println("setupToggleScreen.END");
+    //Serial.println("setupToggleScreen.END");
 }
 
 void initInterface(TTGOClass *ttgo)
 {
 
-    Serial.println("setup.BEGIN");
+    //Serial.println("setup.BEGIN");
 
     // ref: https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/examples/LVGL/Lvgl_Button/Lvgl_Button.ino#L18
     // ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
-    ttgo->begin();                // Initialize TTGO smartwatch hardware
+                    // Initialize TTGO smartwatch hardware
     ttgo->openBL();               // Turn on the blacklight of the TTGO smartwatch display
     ttgo->lvgl_begin();           // Initialize LVGL graphics library for TTGO smartwatch
 
     // Initialize serial communication at given baud rate
     // ref: https://docs.arduino.cc/language-reference/en/functions/communication/serial/begin/
-    Serial.begin(115200);
+    //Serial.begin(115200);
 
     init_global_styles();
 
@@ -418,11 +431,16 @@ void initInterface(TTGOClass *ttgo)
     // Load the initial screen (Main Menu)
     // ref: https://docs.lvgl.io/8/overview/display.html
     lv_scr_load(main_view);
-    Serial.println("setup.END");
+    //Serial.println("setup.END");
 }
 
-void handleTasksInterface(TTGOClass *ttgo)
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables)
 {
+    stepCount = trip->stepCount;
+    avgSpeed = trip->avgSpeed;
+    step_length = systemVariables->step_length;
+    
+    
     // toggle display on/off
     loopWakeUpFormTouchScreen(ttgo);
 
@@ -430,6 +448,8 @@ void handleTasksInterface(TTGOClass *ttgo)
     refreshSessionView();
 
     lv_task_handler(); // Handle LVGL tasks
+
+    return returnData;
 }
 
 #endif
