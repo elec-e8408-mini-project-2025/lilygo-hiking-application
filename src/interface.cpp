@@ -19,7 +19,6 @@ interfaceEvent returnData = {INTERFACE_IDLE, ""};
  */
 lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
 lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
-lv_obj_t *toggle_session_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 
 // GLobal style variables
@@ -29,6 +28,9 @@ static lv_style_t lbl_style_white;
 static lv_style_t lbl_style_black;
 static lv_style_t btn_style_blue;
 static lv_style_t btn_style_red;
+
+// Session view labels containing updateable values
+lv_obj_t *distanceValue, *stepsValue, *toggle_session_lbl, *toggle_session_btn;
 
 // Event handler function
 static void event_handler(lv_obj_t *obj, lv_event_t event)
@@ -144,7 +146,7 @@ void createSessionView()
     lv_obj_align(stepsTitle, session_view, LV_ALIGN_IN_TOP_LEFT, 20, 20);
 
     // Label for steps value
-    lv_obj_t *stepsValue = lv_label_create(session_view, NULL);
+    stepsValue = lv_label_create(session_view, NULL);
     lv_obj_add_style(stepsValue, LV_OBJ_PART_MAIN, &lbl_style_white);
     char lblTextstepCount[32]; // Ensure the buffer is large enough
     sprintf(lblTextstepCount, "%u", stepCount);
@@ -164,7 +166,7 @@ void createSessionView()
     lv_obj_align(distanceUnit, session_view, LV_ALIGN_IN_TOP_LEFT, 190, 40);
 
     // Label for distance value
-    lv_obj_t *distanceValue = lv_label_create(session_view, NULL);
+    distanceValue = lv_label_create(session_view, NULL);
     lv_obj_add_style(distanceValue, LV_OBJ_PART_MAIN, &lbl_style_white);
     char lblDistanceValue[32]; // Make sure buffer is large enough
     sprintf(lblDistanceValue, "%.2f", stepCount * step_length / 1000);
@@ -196,20 +198,7 @@ void createSessionView()
     lv_obj_set_event_cb(toggle_session_btn, event_handler); // Set event handler
     lv_obj_align(toggle_session_btn, NULL, LV_ALIGN_CENTER, 0, 10);
 
-    lv_obj_t *toggle_session_lbl = lv_label_create(toggle_session_btn, NULL);
-
-    if (hasActiveSession)
-    {
-        lv_label_set_text(toggle_session_lbl, "Stop");
-        lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_red);
-        lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_black);
-    }
-    else
-    {
-        lv_label_set_text(toggle_session_lbl, "Start");
-        lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
-        lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
-    }
+    toggle_session_lbl = lv_label_create(toggle_session_btn, NULL);
 
     // Button for Main Menu
     main_menu_btn1 = lv_btn_create(session_view, NULL);
@@ -235,9 +224,29 @@ void refreshSessionView()
         // Serial.println("refreshSessionView.cleanAndLoadSessionView");
         returnData.event = INTERFACE_DEBUG;
         returnData.serialString = "Refreshing sessiong view";
-        lv_obj_clean(session_view);
-        createSessionView();
-        lv_scr_load(session_view);
+        // Update stepCount value
+        // Update distance value
+        char lblDistanceValue[32]; // Make sure buffer is large enough
+        sprintf(lblDistanceValue, "%.2f", stepCount * step_length / 1000);
+        lv_label_set_text(distanceValue, lblDistanceValue);
+        // update step value
+        char lblTextstepCount[32]; // Ensure the buffer is large enough
+        sprintf(lblTextstepCount, "%u", stepCount);
+        lv_label_set_text(stepsValue, lblTextstepCount);
+        
+    }
+
+    if (hasActiveSession)
+    {
+        lv_label_set_text(toggle_session_lbl, "Stop");
+        lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_red);
+        lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_black);
+    }
+    else
+    {
+        lv_label_set_text(toggle_session_lbl, "Start");
+        lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
+        lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
     }
     // Serial.println("refreshSesssionView.END");
 }
