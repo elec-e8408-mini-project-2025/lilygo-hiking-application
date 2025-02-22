@@ -2,6 +2,7 @@
 #include "interface.h"
 // #include "globals.h"
 
+
 // For toggling display state
 bool displayOn = true;
 bool irqPEK = false;
@@ -9,6 +10,7 @@ bool irqPEK = false;
 uint32_t stepCount = 0;
 float step_length = 0.8;
 float avgSpeed = 0.0;
+unsigned long sessionStartTime = 0;
 bool hasActiveSession = false;
 
 interfaceEvent returnData = {INTERFACE_IDLE, ""};
@@ -30,7 +32,7 @@ static lv_style_t btn_style_blue;
 static lv_style_t btn_style_red;
 
 // Session view labels containing updateable values
-lv_obj_t *distanceValue, *stepsValue, *toggle_session_lbl, *toggle_session_btn;
+lv_obj_t *distanceValue, *stepsValue, *avgSpeedValue, *toggle_session_lbl, *toggle_session_btn;
 
 // Event handler function
 static void event_handler(lv_obj_t *obj, lv_event_t event)
@@ -39,18 +41,18 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
     if (event == LV_EVENT_CLICKED)
     {
         //Serial.print("Button clicked: ");returnData
-        returnData.serialString = "Button clicked";
+        returnData.event = INTERFACE_DEBUG;
 
         if (obj == settings_btn)
         {
             //Serial.println("Settings");
-            returnData.serialString = "Settings";
+            returnData.serialString = "Button click: Settings";
             lv_scr_load(settings_view); // Load the settings view
         }
         else if (obj == session_btn)
         {
             //Serial.println("Session");
-            returnData.serialString = "Session";
+            returnData.serialString = "Button click: Session";
             lv_obj_clean(session_view);
             createSessionView();
             lv_scr_load(session_view); // Load the session view
@@ -58,14 +60,14 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         else if (obj == past_sessions_btn)
         {
             //Serial.println("Past Sessions");
-            returnData.serialString = "Past Sessions";
+            returnData.serialString = "Button click: Past Sessions";
             lv_scr_load(past_sessions_view); // load past sessions view
         }
         // TODO: This could perhaps be done more nicely?
         else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
         {
             //Serial.println("Main view");
-            returnData.serialString = "Main view";
+            returnData.serialString = "Button click: Main view";
             lv_scr_load(main_view); // load main menu view
         }
         else if (obj == toggle_session_btn)
@@ -186,7 +188,7 @@ void createSessionView()
     lv_obj_align(avgSpeedUnit, session_view, LV_ALIGN_IN_TOP_LEFT, 190, 60);
 
     // Label for steps value
-    lv_obj_t *avgSpeedValue = lv_label_create(session_view, NULL);
+    avgSpeedValue = lv_label_create(session_view, NULL);
     lv_obj_add_style(avgSpeedValue, LV_OBJ_PART_MAIN, &lbl_style_white);
     char lblTextAvgSpeedValue[32]; // Ensure the buffer is large enough
     sprintf(lblTextAvgSpeedValue, "%.2f", avgSpeed);
@@ -227,12 +229,33 @@ void refreshSessionView()
         // Update stepCount value
         // Update distance value
         char lblDistanceValue[32]; // Make sure buffer is large enough
-        sprintf(lblDistanceValue, "%.2f", stepCount * step_length / 1000);
+        float distance = stepCount * step_length / 1000;
+        sprintf(lblDistanceValue, "%.2f", distance);
         lv_label_set_text(distanceValue, lblDistanceValue);
         // update step value
         char lblTextstepCount[32]; // Ensure the buffer is large enough
         sprintf(lblTextstepCount, "%u", stepCount);
         lv_label_set_text(stepsValue, lblTextstepCount);
+
+        // update average speed
+        unsigned long timeNow = millis();
+        float secondsPassed = (millis() - sessionStartTime) / 1000;
+        float avgSpeed; 
+        if (secondsPassed < 1) {
+            avgSpeed = 0;
+        } else {
+            avgSpeed = distance / (secondsPassed / 3600);
+        }
+        char lblTextAvgSpeedValue[32]; // Ensure the buffer is large enough
+        sprintf(lblTextAvgSpeedValue, "%.2f", avgSpeed);
+        lv_label_set_text(avgSpeedValue, lblTextAvgSpeedValue);
+
+        Serial.print("Distance: ");
+        Serial.print(distance);
+        Serial.print(", Seconds passed: ");
+        Serial.print(secondsPassed);
+        Serial.print(" Speed: ");
+        Serial.println(avgSpeed);
         
     }
 
@@ -463,6 +486,7 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     stepCount = trip->stepCount;
     avgSpeed = trip->avgSpeed;
     step_length = systemVariables->step_length;
+    sessionStartTime = trip->timestampStart;
 
     lv_task_handler(); // Handle LVGL tasks
     
