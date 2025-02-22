@@ -230,7 +230,7 @@ void refreshSessionView()
 {
     // Serial.println("refreshSesssionView.BEGIN");
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
-    if (session_view == lv_scr_act() && hasActiveSession)
+    if (session_view == lv_scr_act())
     {
         // Serial.println("refreshSessionView.cleanAndLoadSessionView");
         returnData.event = INTERFACE_DEBUG;
