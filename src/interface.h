@@ -10,7 +10,8 @@ typedef enum {
     INTERFACE_PAUSE_SESSION,
     INTERFACE_DISABLE_BLUETOOTH,
     INTERFACE_ENABLE_BLUETOOTH,
-    INTERFACE_IDLE
+    INTERFACE_IDLE,
+    INTERFACE_DEBUG
 } interfaceEventType;
 
 typedef struct {
@@ -28,6 +29,6 @@ void createPastSessionsView();
 
 void initInterface(TTGOClass *ttgo);
 
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables);
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView);
 
 #endif

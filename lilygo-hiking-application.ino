@@ -29,6 +29,8 @@ const uint32_t delayInMilliSeconds = 5;
 // interval in milliseconds for handling interface related tasks
 const uint32_t displayRefreshIntervalMs = 20;
 const uint32_t displayRefreshRate = displayRefreshIntervalMs / delayInMilliSeconds;
+const uint32_t sessionViewRefreshIntervalMs = 250;
+const uint32_t sessionViewRefreshRate = sessionViewRefreshIntervalMs / delayInMilliSeconds;
 
 systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false};
 
@@ -55,14 +57,11 @@ void loop()
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
     // TODO: calculate from delay like: 20 ms / delay % == 0 -> MUST return int
-    if (loopCounter % 4 == 0) {
-        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables);
-        Serial.print("Handling resultData. Interface event is: ");
-        Serial.println(interfaceEvent.event);
+    if (loopCounter % displayRefreshRate == 0) {
+        bool isRefreshSessionView = loopCounter % sessionViewRefreshRate == 0;
 
-        if (interfaceEvent.event != INTERFACE_IDLE) {
-            writeSerialString(interfaceEvent.serialString);
-        }
+        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView);
+        
         switch (interfaceEvent.event)
         {
             case INTERFACE_TOGGLE_SESSION:
@@ -81,6 +80,8 @@ void loop()
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
                 break;
+            case INTERFACE_DEBUG:
+                writeSerialString(interfaceEvent.serialString);
             case INTERFACE_IDLE:
                 break;
             default:

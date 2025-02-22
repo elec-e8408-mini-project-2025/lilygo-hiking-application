@@ -230,9 +230,11 @@ void refreshSessionView()
 {
     // Serial.println("refreshSesssionView.BEGIN");
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
-    if (session_view == lv_scr_act())
+    if (session_view == lv_scr_act() && hasActiveSession)
     {
         // Serial.println("refreshSessionView.cleanAndLoadSessionView");
+        returnData.event = INTERFACE_DEBUG;
+        returnData.serialString = "Refreshing sessiong view";
         lv_obj_clean(session_view);
         createSessionView();
         lv_scr_load(session_view);
@@ -441,9 +443,10 @@ void initInterface(TTGOClass *ttgo)
  * @param *ttgo pointer to TTGOClass
  * @param *trip pointer to trip struct
  * @param *systemVariables pointer to global variables shared by multiple libraries
+ * @param refreshSessionView indicates if sessionView is to be refreshed 
  * @return returnData an interface event that is handled in main ino-file
  */
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables)
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
 {
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
@@ -458,7 +461,10 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     loopWakeUpFormTouchScreen(ttgo);
 
     // refresh session view
-    refreshSessionView();
+    if (isRefreshSessionView) {
+        refreshSessionView();
+    }
+    
 
     
 
