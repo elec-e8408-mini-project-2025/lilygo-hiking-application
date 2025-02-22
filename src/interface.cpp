@@ -37,6 +37,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
     if (event == LV_EVENT_CLICKED)
     {
         //Serial.print("Button clicked: ");returnData
+        returnData.serialString = "Button clicked";
 
         if (obj == settings_btn)
         {
@@ -434,6 +435,14 @@ void initInterface(TTGOClass *ttgo)
     //Serial.println("setup.END");
 }
 
+
+/*
+ * Handles interface related tasks in set intervals:
+ * @param *ttgo pointer to TTGOClass
+ * @param *trip pointer to trip struct
+ * @param *systemVariables pointer to global variables shared by multiple libraries
+ * @return returnData an interface event that is handled in main ino-file
+ */
 interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables)
 {
     returnData.serialString = "";

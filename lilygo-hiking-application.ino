@@ -22,8 +22,13 @@ tripData trips[] = {
 };
 
 
+// Global loop counter
 long loopCounter = 0;
-uint32_t delayMilliseconds = 5;
+// hard coded constant for loop delay
+const uint32_t delayInMilliSeconds = 5;
+// interval in milliseconds for handling interface related tasks
+const uint32_t displayRefreshIntervalMs = 20;
+const uint32_t displayRefreshRate = displayRefreshIntervalMs / delayInMilliSeconds;
 
 systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false};
 
@@ -52,6 +57,9 @@ void loop()
     // TODO: calculate from delay like: 20 ms / delay % == 0 -> MUST return int
     if (loopCounter % 4 == 0) {
         interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables);
+        Serial.print("Handling resultData. Interface event is: ");
+        Serial.println(interfaceEvent.event);
+
         if (interfaceEvent.event != INTERFACE_IDLE) {
             writeSerialString(interfaceEvent.serialString);
         }
@@ -109,5 +117,5 @@ void loop()
 
     // Short delay to avoid overloading the processor
     ++loopCounter;
-    delay(delayMilliseconds);
+    delay(delayInMilliSeconds);
 }
