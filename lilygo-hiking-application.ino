@@ -9,6 +9,7 @@
 #include "./src/accelerator.h"
 #include "./src/step.h"
 TTGOClass *ttgo;
+PCF8563_Class *rtc;
 #endif
 
 
@@ -44,6 +45,11 @@ void setup()
 #ifndef ESP32_WROOM_32
     ttgo = TTGOClass::getWatch();
     ttgo->begin();
+    
+    rtc = ttgo->rtc;
+    // Use compile time
+    rtc->check();
+
     initInterface(ttgo);
     initAccelerator(ttgo);
 #endif
@@ -79,9 +85,16 @@ void loop()
                     Serial.print("Step count: ");
                     Serial.println(trips[systemVariables.currentTrip].stepCount);
                     writeSerialString("Stopping session!");
+                    trips[systemVariables.currentTrip].timestampStop = millis();
                     ++systemVariables.currentTrip;
                     systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
                     resetAccelerator();
+                } else {
+                    trips[systemVariables.currentTrip].timestampStart = millis();
+
+                    Serial.print("Timestamp: ");
+                    Serial.println(trips[systemVariables.currentTrip].timestampStart);
+
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
                 break;
