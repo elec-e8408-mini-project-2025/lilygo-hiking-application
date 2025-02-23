@@ -8,6 +8,7 @@
 #include "./src/interface.h"
 #include "./src/accelerator.h"
 #include "./src/step.h"
+#include "./src/gps.h"
 TTGOClass *ttgo;
 PCF8563_Class *rtc;
 #endif
@@ -52,6 +53,7 @@ void setup()
 
     initInterface(ttgo);
     initAccelerator(ttgo);
+    initGPS(ttgo);
 #endif
 
     // // Bluetooth interface

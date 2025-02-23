@@ -6,6 +6,7 @@
 typedef struct {
     double latitude[GEO_MAX_SIZE]; 
     double longitude[GEO_MAX_SIZE]; 
+    double distance;
     int dataLen;
     unsigned long timestamp;
 } geoData;
@@ -16,7 +17,7 @@ typedef struct {
     unsigned long timestampStop;
     uint32_t stepCount;
     float avgSpeed;
-    //geoData tripGeoData;
+    geoData tripGeoData;
 } tripData;
 
 typedef struct {
