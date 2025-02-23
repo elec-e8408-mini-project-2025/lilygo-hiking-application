@@ -1,5 +1,6 @@
 #ifndef ESP32_WROOM_32
 #include "interface.h"
+#include <string>
 // #include "globals.h"
 
 
@@ -12,6 +13,10 @@ float step_length = 0.8;
 float avgSpeed = 0.0;
 unsigned long sessionStartTime = 0;
 bool hasActiveSession = false;
+uint32_t nOfTrips = 0;
+
+tripData *pastTrips; 
+
 
 interfaceEvent returnData = {INTERFACE_IDLE, ""};
 
@@ -22,6 +27,7 @@ interfaceEvent returnData = {INTERFACE_IDLE, ""};
 lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
 lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
+lv_obj_t *past_sessions_data;
 
 // GLobal style variables
 // ref: https://docs.lvgl.io/8.0/overview/style.html
@@ -61,6 +67,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         {
             //Serial.println("Past Sessions");
             returnData.serialString = "Button click: Past Sessions";
+            updatePastSessionData();
             lv_scr_load(past_sessions_view); // load past sessions view
         }
         // TODO: This could perhaps be done more nicely?
@@ -86,6 +93,37 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             hasActiveSession = !hasActiveSession;
         }
     }
+}
+
+void updatePastSessionData() {
+    
+    Serial.print("Updating past session data, size of past trips: ");
+    Serial.println(nOfTrips);
+    
+    String data = "";
+    for (int i = 0; i < nOfTrips; i++) {
+        if (pastTrips[i].stepCount == 0) {
+            continue;
+        }
+        unsigned long seconds = (pastTrips[i].timestampStop - pastTrips[i].timestampStart) / 1000;
+        float distance = pastTrips[i].stepCount * 0.8 / 1000;
+        float speed;
+        if (seconds < 1) {
+            speed = 0;            
+        } else {
+            speed = distance / (seconds / 3600);
+        }
+        data += String(pastTrips[i].tripID) + "\t" + String(pastTrips[i].stepCount) + "\t" + String(distance, 2) + "\t" + String(speed) + "\n";
+    }
+
+    Serial.println(data);
+
+    if (data.length() > 0) {
+        String header = "ID\tSTEPS\tDISTANCE\tAVG.SPEED\n";
+        header += data;
+        lv_label_set_text(past_sessions_data, header.c_str());
+    }
+    
 }
 
 // Function to create the Main Menu view
@@ -317,10 +355,10 @@ void createPastSessionsView()
     lv_obj_add_style(past_sessions_view, LV_OBJ_PART_MAIN, &cont_style);
 
     // Label for steps
-    lv_obj_t *table_lbl = lv_label_create(past_sessions_view, NULL);
-    lv_label_set_text(table_lbl, "TABLE HERE");
-    lv_obj_align(table_lbl, past_sessions_view, LV_ALIGN_CENTER, 0, -40);
-    lv_obj_add_style(table_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
+    past_sessions_data = lv_label_create(past_sessions_view, NULL);
+    lv_label_set_text(past_sessions_data, "NO HIKING SESSIONS TO SHOW.\n TAKE YOUR WATCH ON A HIKE!");
+    lv_obj_align(past_sessions_data, past_sessions_view, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_add_style(past_sessions_data, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Button for Main Menu
     main_menu_btn3 = lv_btn_create(past_sessions_view, NULL);
@@ -478,7 +516,7 @@ void initInterface(TTGOClass *ttgo)
  * @param refreshSessionView indicates if sessionView is to be refreshed 
  * @return returnData an interface event that is handled in main ino-file
  */
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView, tripData * trips)
 {
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
@@ -487,6 +525,8 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     avgSpeed = trip->avgSpeed;
     step_length = systemVariables->step_length;
     sessionStartTime = trip->timestampStart;
+    pastTrips = trips;
+    nOfTrips = systemVariables->maxTrips;
 
     lv_task_handler(); // Handle LVGL tasks
     
