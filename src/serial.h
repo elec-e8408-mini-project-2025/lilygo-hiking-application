@@ -20,6 +20,8 @@ void initSerial();
 
 serialBuffer handleSerialByte();
 
+void writeSerialString(char * data);
+
 void writeSerial(char * data, int dataLen);
 
 #endif
