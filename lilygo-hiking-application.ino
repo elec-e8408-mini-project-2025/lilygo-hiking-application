@@ -9,6 +9,7 @@
 #include "./src/accelerator.h"
 #include "./src/step.h"
 TTGOClass *ttgo;
+PCF8563_Class *rtc;
 #endif
 
 
@@ -22,8 +23,19 @@ tripData trips[] = {
 };
 
 
+// Global loop counter
 long loopCounter = 0;
-uint32_t delayMilliseconds = 5;
+// hard coded constant for loop delay
+// to ensure optimal 
+const uint32_t delayInMilliSeconds = 5;
+
+// interval in milliseconds for handling interface related tasks
+const uint32_t displayRefreshIntervalMs = 20;
+const uint32_t displayRefreshRate = displayRefreshIntervalMs / delayInMilliSeconds;
+
+// interval in milliseconds for updating session view data
+const uint32_t sessionViewRefreshIntervalMs = 250;
+const uint32_t sessionViewRefreshRate = sessionViewRefreshIntervalMs / delayInMilliSeconds;
 
 systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false};
 
@@ -33,6 +45,11 @@ void setup()
 #ifndef ESP32_WROOM_32
     ttgo = TTGOClass::getWatch();
     ttgo->begin();
+    
+    rtc = ttgo->rtc;
+    // Use compile time
+    rtc->check();
+
     initInterface(ttgo);
     initAccelerator(ttgo);
 #endif
@@ -49,12 +66,13 @@ void loop()
 
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
-    // TODO: calculate from delay like: 20 ms / delay % == 0 -> MUST return int
-    if (loopCounter % 4 == 0) {
-        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables);
-        if (interfaceEvent.event != INTERFACE_IDLE) {
-            writeSerialString(interfaceEvent.serialString);
-        }
+    bool isRefreshSessionView = loopCounter % sessionViewRefreshRate == 0;
+    
+    if (loopCounter % displayRefreshRate == 0 || isRefreshSessionView) {
+        
+
+        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView);
+        
         switch (interfaceEvent.event)
         {
             case INTERFACE_TOGGLE_SESSION:
@@ -67,12 +85,22 @@ void loop()
                     Serial.print("Step count: ");
                     Serial.println(trips[systemVariables.currentTrip].stepCount);
                     writeSerialString("Stopping session!");
+                    trips[systemVariables.currentTrip].timestampStop = millis();
                     ++systemVariables.currentTrip;
                     systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
                     resetAccelerator();
+                } else {
+                    trips[systemVariables.currentTrip].timestampStart = millis();
+
+                    Serial.print("Timestamp: ");
+                    Serial.println(trips[systemVariables.currentTrip].timestampStart);
+
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
                 break;
+            case INTERFACE_DEBUG:
+                // Outputs debug information
+                writeSerialString(interfaceEvent.serialString);
             case INTERFACE_IDLE:
                 break;
             default:
@@ -109,5 +137,5 @@ void loop()
 
     // Short delay to avoid overloading the processor
     ++loopCounter;
-    delay(delayMilliseconds);
+    delay(delayInMilliSeconds);
 }

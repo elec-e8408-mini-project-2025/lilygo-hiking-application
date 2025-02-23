@@ -9,8 +9,11 @@ bool irqAcc = false;
 uint32_t currentSteps = 0;
 
 /*
- * Sets up accelerator
- * Code taken from TTGO example stepCount
+ * Initializes the accelerator
+ * @param *ttgo pointer to TTGOClass
+ * 
+ * Note: Code taken from TTGO example stepCount
+ * 
  */
 void initAccelerator(TTGOClass *ttgo)
 {
@@ -89,8 +92,12 @@ void initAccelerator(TTGOClass *ttgo)
 }
 
 /*
- * loop handler for accelerator
- * Code taken from TTGO example stepCount
+ * loop handler for accelerator. If interrupt for accelerator 
+ * irqAcc is asserted, update currentSteps value. 
+ * 
+ * @return currently stored value of accelerator counter
+ * 
+ * Note: Code taken from TTGO example stepCount
  */
 uint32_t handleTasksAccelerator()
 {
