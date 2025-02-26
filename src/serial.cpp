@@ -1,4 +1,5 @@
 #include "serial.h"
+#include <LilyGoWatch.h>
 bool commandFinishedSer = 0;
 int byteCountSer = 0;
 char rxDataSer[SERIAL_BUFFER_SIZE]; 
@@ -67,17 +68,14 @@ void writeSerial(char * data, int dataLen)
     Serial.println();
 }
 
-void writeSerialRTCTime(RTC_Date date)
+void writeSerialRTCTime()
 {
-    Serial.print(date.year);
-    Serial.print("-");
-    Serial.print(date.month);
-    Serial.print("-");
-    Serial.print(date.day);
-    Serial.print("/");
-    Serial.print(date.hour);
-    Serial.print(":");
-    Serial.print(date.minute);
-    Serial.print(":");
-    Serial.println(date.second);
+    if (rtc == nullptr) {
+        Serial.println("RTC object is null!");
+        return;
+    }
+
+    Wire.beginTransmission(0x00);  // Dummy transmission
+    Wire.endTransmission();
+    Serial.println(rtc->formatDateTime(5));
 }

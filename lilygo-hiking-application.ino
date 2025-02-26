@@ -63,6 +63,7 @@ void setup()
 
     // Serial debugging interface
     initSerial();
+    //xTaskCreatePinnedToCore(loopTask, "LoopTask", 4096, NULL, 1, NULL, 1);  // Run on Core 1
 }
 
 void loop()
@@ -113,9 +114,12 @@ void loop()
                 // Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
             case INTERFACE_DEBUG:
                 // Outputs debug information
-                writeSerialRTCTime(rtc->getDateTime());
                 writeSerialString(interfaceEvent.serialString);
-            case INTERFACE_IDLE:
+                // writeSerialRTCTime(rtc);
+                // writeSerialRTCTime(rtc->getDateTime());
+                //Serial.println(rtc->formatDateTime());
+                writeSerialRTCTime();
+                case INTERFACE_IDLE:
                 break;
             default:
                 writeSerialString("INTERFACE EVENT: not implemented");
