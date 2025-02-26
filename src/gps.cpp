@@ -56,11 +56,10 @@ void initGPS(TTGOClass *ttgo) {
     GNSS = ttgo->hwSerial;
     gps = ttgo->gps;
 
-    //if (!Quectel_L76X_Probe()) {
-    //    tft->setCursor(0, 0);
-    //    tft->setTextColor(TFT_RED);
-    //    tft->println("GNSS Probe failed!"); while (1);
-    //}
+    if (!Quectel_L76X_Probe()) 
+    {
+        Serial.print("Failed GPS setup");
+    }
 
     // Display on the screen, latitude and longitude, number of satellites, and date and time
     //eSpLoaction   = new TFT_eSprite(tft); // Sprite object for eSpLoaction
@@ -81,7 +80,6 @@ void initGPS(TTGOClass *ttgo) {
     //eSpSatellites->setTextFont(2);
 
     last = millis();
-    return *gps;
 }
 
 double getLat() {
@@ -100,7 +98,7 @@ uint32_t getDate() {
     return gps->date.value();
 }
 
-double, double, double takeStep() {
+GPSPoint takeStep() {
     double lat = getLat();
     double lon = getLon();
     double dist = 0;
@@ -110,8 +108,35 @@ double, double, double takeStep() {
     } else {
         dist = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon);
     }
-    return lat, lon, dist;
+    GPSPoint point = {lat, lon, dist};
+    return point;
 }
 
+/*
+uint8_t, uint8_t, uint8_t getTime() {
+    uint8_t hour = gps->time.hour();
+    uint8_t minute = gps->time.minute();
+    uint8_t second = gps->time.second();
+    return hours, minutes, seconds;
+}
+
+uint8_t, uint8_t, uint8_t getDate() {
+    uint8_t year = gps->time.year();
+    uint8_t month = gps->time.month();
+    uint8_t day = gps->time.day();
+    return hours, minutes, seconds;
+}
+*/
+
+
+void setRTCTime(PCF8563_Class *rtc) {
+    uint8_t year = gps->date.year();
+    uint8_t month = gps->date.month();
+    uint8_t day = gps->date.day();
+    uint8_t hour = gps->time.hour();
+    uint8_t minute = gps->time.minute();
+    uint8_t second = gps->time.second();
+    rtc->setDateTime(year, month, day, hour, minute, second);
+}
 
 #endif
