@@ -8,9 +8,11 @@
 #include "./src/interface.h"
 #include "./src/accelerator.h"
 #include "./src/step.h"
-#include "./src/gps.h"
 TTGOClass *ttgo;
 PCF8563_Class *rtc;
+#endif
+#ifdef LILYGO_WATCH_2020_V2
+#include "./src/gps.h"
 #endif
 
 

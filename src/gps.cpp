@@ -46,8 +46,6 @@ bool Quectel_L76X_Probe()
 
 void initGPS(TTGOClass *ttgo) {
 
-    ttgo->begin();
-
     //Open gps power
     ttgo->trunOnGPS();
 
