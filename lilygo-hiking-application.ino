@@ -102,6 +102,15 @@ void loop()
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
                 break;
+            case INTERFACE_SYNC_GPS_TIME:
+                writeSerialString("SYNCING GPS TIME");
+                // Serial.print("Current RTC");
+                // Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                //Serial.print("Coming date");
+                //Serial.println(getDateTime());
+                setRTCTime(rtc);
+                // Serial.print("RTC after");
+                // Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
             case INTERFACE_DEBUG:
                 // Outputs debug information
                 writeSerialString(interfaceEvent.serialString);

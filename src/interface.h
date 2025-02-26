@@ -11,7 +11,8 @@ typedef enum {
     INTERFACE_DISABLE_BLUETOOTH,
     INTERFACE_ENABLE_BLUETOOTH,
     INTERFACE_IDLE,
-    INTERFACE_DEBUG
+    INTERFACE_DEBUG,
+    INTERFACE_SYNC_GPS_TIME
 } interfaceEventType;
 
 typedef struct {
