@@ -113,6 +113,7 @@ void loop()
                 // Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
             case INTERFACE_DEBUG:
                 // Outputs debug information
+                writeSerialRTCTime(rtc->getDateTime());
                 writeSerialString(interfaceEvent.serialString);
             case INTERFACE_IDLE:
                 break;

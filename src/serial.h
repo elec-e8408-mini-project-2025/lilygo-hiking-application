@@ -24,4 +24,6 @@ void writeSerialString(char * data);
 
 void writeSerial(char * data, int dataLen);
 
+void writeSerialRTCTime(RTC_Date date);
+
 #endif

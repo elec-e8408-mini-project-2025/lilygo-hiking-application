@@ -66,3 +66,18 @@ void writeSerial(char * data, int dataLen)
     commandFinishedSer = 0;
     Serial.println();
 }
+
+void writeSerialRTCTime(RTC_Date date)
+{
+    Serial.print(date.year);
+    Serial.print("-");
+    Serial.print(date.month);
+    Serial.print("-");
+    Serial.print(date.day);
+    Serial.print("/");
+    Serial.print(date.hour);
+    Serial.print(":");
+    Serial.print(date.minute);
+    Serial.print(":");
+    Serial.println(date.second);
+}
