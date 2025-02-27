@@ -1,5 +1,6 @@
 #ifndef ESP32_WROOM_32
 #include "gps.h"
+#include <LilyGoWatch.h>
 
 TinyGPSPlus *gps = nullptr;
 HardwareSerial *GNSS = NULL;
@@ -80,6 +81,14 @@ void initGPS(TTGOClass *ttgo) {
     last = millis();
 }
 
+void updateGPS() {
+    while (GNSS->available()) {
+        int r = GNSS->read();
+        // Serial.write(r);
+        gps->encode(r);
+    }
+}
+
 double getLat() {
     return gps->location.lat();
 }
@@ -88,13 +97,13 @@ double getLon() {
     return gps->location.lng();
 }
 
-uint32_t getTime() {
-    return gps->time.value();
-}
+// uint32_t getTime() {
+//     return gps->time.value();
+// }
 
-uint32_t getDate() {
-    return gps->date.value();
-}
+// uint32_t getDate() {
+//     return gps->date.value();
+// }
 
 GPSPoint takeStep() {
     double lat = getLat();
@@ -128,6 +137,7 @@ uint8_t, uint8_t, uint8_t getDate() {
 
 
 void setRTCTime(PCF8563_Class *rtc) {
+    Serial.println("updating GPS");
     uint8_t year = gps->date.year();
     uint8_t month = gps->date.month();
     uint8_t day = gps->date.day();

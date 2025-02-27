@@ -1,7 +1,9 @@
 #ifndef GPS_H
 #define GPS_H
-#include <LilyGoWatch.h>
 #include <string>
+
+class TTGOClass;
+class PCF8563_Class;
 
 typedef struct {
     double lat;
@@ -11,13 +13,11 @@ typedef struct {
 
 void initGPS(TTGOClass *ttgo);
 
+void updateGPS();
+
 double getLatitude();
 
 double getLongitude();
-
-uint32_t getTime();
-
-uint32_t getDate();
 
 // returns a struct with latitude, longitude, distance from last step
 // gets given the datastructure and puts the nxt data into it

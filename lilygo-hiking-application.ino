@@ -12,6 +12,7 @@ TTGOClass *ttgo;
 PCF8563_Class *rtc;
 #endif
 #ifdef LILYGO_WATCH_2020_V2
+#include <LilyGoWatch.h>
 #include "./src/gps.h"
 #endif
 
@@ -68,7 +69,9 @@ void setup()
 
 void loop()
 {
-
+    #ifdef LILYGO_WATCH_2020_V2
+    updateGPS();
+    #endif
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
     bool isRefreshSessionView = loopCounter % sessionViewRefreshRate == 0;
@@ -105,13 +108,11 @@ void loop()
                 break;
             case INTERFACE_SYNC_GPS_TIME:
                 writeSerialString("SYNCING GPS TIME");
-                // Serial.print("Current RTC");
-                // Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
-                //Serial.print("Coming date");
-                //Serial.println(getDateTime());
+                Serial.print("Current RTC");
+                writeSerialRTCTime();
                 setRTCTime(rtc);
                 // Serial.print("RTC after");
-                // Serial.println(rtc->formatDateTime(PCF_TIMEFORMAT_YYYY_MM_DD_H_M_S));
+                // writeSerialRTCTime();
             case INTERFACE_DEBUG:
                 // Outputs debug information
                 writeSerialString(interfaceEvent.serialString);

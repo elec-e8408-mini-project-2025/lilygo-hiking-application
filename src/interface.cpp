@@ -85,6 +85,10 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             }
             hasActiveSession = !hasActiveSession;
         }
+        else if (obj == manual_sync_btn)
+        {
+            returnData.event = INTERFACE_SYNC_GPS_TIME;
+        }
     }
 }
 
