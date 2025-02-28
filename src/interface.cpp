@@ -9,11 +9,12 @@ bool displayOn = true;
 bool irqPEK = false;
 
 uint32_t stepCount = 0;
-float step_length = 0.8;
+float step_length = 0.76;
 float avgSpeed = 0.0;
 unsigned long sessionStartTime = 0;
 bool hasActiveSession = false;
 uint32_t nOfTrips = 0;
+
 
 tripData *pastTrips; 
 
@@ -99,27 +100,41 @@ void updatePastSessionData() {
     
     Serial.print("Updating past session data, size of past trips: ");
     Serial.println(nOfTrips);
+    uint32_t takenTripsCounter = 0;
     
+    // Using Arduino String library
     String data = "";
+    
     for (int i = 0; i < nOfTrips; i++) {
         if (pastTrips[i].stepCount == 0) {
             continue;
         }
-        unsigned long seconds = (pastTrips[i].timestampStop - pastTrips[i].timestampStart) / 1000;
-        float distance = pastTrips[i].stepCount * 0.8 / 1000;
+        takenTripsCounter++;
+        float seconds = (pastTrips[i].timestampStop - pastTrips[i].timestampStart) / 1000;
+        float distance = pastTrips[i].stepCount * step_length / 1000;
         float speed;
         if (seconds < 1) {
             speed = 0;            
         } else {
             speed = distance / (seconds / 3600);
         }
-        data += String(pastTrips[i].tripID) + "\t" + String(pastTrips[i].stepCount) + "\t" + String(distance, 2) + "\t" + String(speed) + "\n";
+        // TODO: as a future refactor this String formation could be made more efficient
+        Serial.print("Seconds: ");
+        Serial.print(seconds);
+        Serial.print(", distance: ");
+        Serial.print(distance);
+        Serial.print(", speed: ");
+        Serial.println(speed);
+        data += String("25-02-28: " + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
     }
 
     Serial.println(data);
+    // Each table cell has 12 characters 
 
     if (data.length() > 0) {
-        String header = "ID\tSTEPS\tDISTANCE\tAVG.SPEED\n";
+        Serial.print("Refreshing past sessions text label. Trips taken: ");
+        Serial.println(takenTripsCounter);
+        String header = "PAST HIKING SESSIONS: \n";
         header += data;
         lv_label_set_text(past_sessions_data, header.c_str());
     }
@@ -382,6 +397,8 @@ void init_global_styles()
     // container style
     lv_style_init(&cont_style);
     lv_style_init(&cont_style);
+    // NOTE: Supported fonts are listed in lv_conf.h
+    lv_style_set_text_font(&cont_style, LV_STATE_DEFAULT, &lv_font_montserrat_14);
     lv_style_set_radius(&cont_style, LV_OBJ_PART_MAIN, 0);
     lv_style_set_bg_color(&cont_style, LV_OBJ_PART_MAIN, LV_COLOR_BLACK);
     lv_style_set_bg_opa(&cont_style, LV_OBJ_PART_MAIN, LV_OPA_COVER);
