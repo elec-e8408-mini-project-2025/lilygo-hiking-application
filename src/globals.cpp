@@ -1,22 +1,15 @@
 #ifndef ESP32_WROOM_32
 #include "globals.h"
+#include <LilyGoWatch.h>
 
-
-/////////////////////// MOVED TO LIBRARY accelerator.cpp
-// Step counter
-// TFT_eSPI *tft;
-// BMA *sensor;
-// bool irqAcc = false;
-
-
-/////////////////////// MOVED TO LIBRARY interface.cpp
-
-// uint32_t stepCount = 0;
-// const float step_length = 0.8;
-// float avgSpeed = 0.0;
-
-// Becomes true when start button is pressed in session view
-// Becomes false when stop button is pressed in session view
-// bool hasActiveSession = false;
+timeStamp createTimestampFromRTC(RTC_Date date)
+{
+    uint16_t year = date.year;
+    uint8_t month = date.month;
+    uint8_t day = date.day;
+    uint8_t hour = date.hour;
+    uint8_t minute = date.minute;
+    uint8_t second = date.second;
+}
 
 #endif

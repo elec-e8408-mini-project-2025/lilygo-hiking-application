@@ -1,6 +1,8 @@
 #ifndef ESP32_WROOM_32
 #include "interface.h"
-// #include "globals.h"
+#include <LilyGoWatch.h>
+#include "globals.h"
+#include "data.h"
 
 
 // For toggling display state
@@ -10,7 +12,7 @@ bool irqPEK = false;
 uint32_t stepCount = 0;
 float step_length = 0.8;
 float avgSpeed = 0.0;
-unsigned long sessionStartTime = 0;
+timeStamp sessionStartTime;
 bool hasActiveSession = false;
 
 interfaceEvent returnData = {INTERFACE_IDLE, ""};
@@ -221,7 +223,7 @@ void createSessionView()
  * Helper function that refreshes session view at predefined intervals
  * when session view is rendered
  */
-void refreshSessionView()
+void refreshSessionView(PCF8563_Class *rtc)
 {
     // Serial.println("refreshSesssionView.BEGIN");
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
@@ -242,8 +244,11 @@ void refreshSessionView()
         lv_label_set_text(stepsValue, lblTextstepCount);
 
         // update average speed
-        unsigned long timeNow = millis();
-        float secondsPassed = (millis() - sessionStartTime) / 1000;
+        RTC_Date timeTemp = rtc->getDateTime();
+        timeStamp timeNow = createTimestampFromRTC(timeTemp);
+        float hoursPassedInSeconds = (timeNow.hour - sessionStartTime.hour) * 3600;
+        float minutesPassedInSeconds = (timeNow.minute - sessionStartTime.minute) * 60;
+        float secondsPassed = (timeNow.second - sessionStartTime.second) + minutesPassedInSeconds + hoursPassedInSeconds;
         float avgSpeed; 
         if (secondsPassed < 1) {
             avgSpeed = 0;
@@ -482,7 +487,7 @@ void initInterface(TTGOClass *ttgo)
  * @param refreshSessionView indicates if sessionView is to be refreshed 
  * @return returnData an interface event that is handled in main ino-file
  */
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, PCF8563_Class *rtc, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
 {
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
@@ -499,7 +504,7 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
 
     // refresh session view
     if (isRefreshSessionView) {
-        refreshSessionView();
+        refreshSessionView(rtc);
     }
     
 

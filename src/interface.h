@@ -2,8 +2,13 @@
 #define INTERFACE_H
 #define LILYGO_WATCH_LVGL
 #include <LilyGoWatch.h>
-#include <stdint.h>
 #include "data.h"
+#include <stdint.h>
+
+// class PCF8563_Class;
+// class TTGOClass;
+// struct tripData;
+// struct systemGlobals;
 
 typedef enum {
     INTERFACE_TOGGLE_SESSION,
@@ -30,6 +35,6 @@ void createPastSessionsView();
 
 void initInterface(TTGOClass *ttgo);
 
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView);
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, PCF8563_Class *rtc, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView);
 
 #endif

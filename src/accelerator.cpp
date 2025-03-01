@@ -1,6 +1,7 @@
 #ifndef ESP32_WROOM_32
 #include "accelerator.h"
-//#include "globals.h"
+#include "globals.h"
+#include <LilyGoWatch.h>
 
 TFT_eSPI *tft;
 BMA *sensor;

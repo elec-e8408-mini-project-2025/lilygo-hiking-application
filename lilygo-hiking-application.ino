@@ -4,7 +4,9 @@
 #include "./src/bluetooth.h"
 #include "./src/serial.h"
 #include "./src/net.h"
+#include "./src/globals.h"
 #ifndef ESP32_WROOM_32
+// #include <LilyGoWatch.h>
 #include "./src/interface.h"
 #include "./src/accelerator.h"
 #include "./src/step.h"
@@ -12,18 +14,17 @@ TTGOClass *ttgo;
 PCF8563_Class *rtc;
 #endif
 #ifdef LILYGO_WATCH_2020_V2
-#include <LilyGoWatch.h>
 #include "./src/gps.h"
 #endif
 
 
 // System data (Global Variables)
 tripData trips[] = {
-    {0, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0},
-    {2, 0, 0, 0, 0},
-    {3, 0, 0, 0, 0},
-    {4, 0, 0, 0, 0},
+    {0, 0, 0},
+    {1, 0, 0},
+    {2, 0, 0},
+    {3, 0, 0},
+    {4, 0, 0},
 };
 
 
@@ -56,7 +57,9 @@ void setup()
 
     initInterface(ttgo);
     initAccelerator(ttgo);
+    #ifdef LILYGO_WATCH_2020_V2
     initGPS(ttgo);
+    #endif
 #endif
 
     // // Bluetooth interface
@@ -78,9 +81,8 @@ void loop()
     
     if (loopCounter % displayRefreshRate == 0 || isRefreshSessionView) {
         
+        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, rtc, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView);
 
-        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView);
-        
         switch (interfaceEvent.event)
         {
             case INTERFACE_TOGGLE_SESSION:
@@ -93,26 +95,28 @@ void loop()
                     Serial.print("Step count: ");
                     Serial.println(trips[systemVariables.currentTrip].stepCount);
                     writeSerialString("Stopping session!");
-                    trips[systemVariables.currentTrip].timestampStop = millis();
+                    trips[systemVariables.currentTrip].timestampStop = createTimestampFromRTC(rtc->getDateTime());
+                    Serial.print("Stop Timestamp: ");
+                    writeSerialRTCDateObj(trips[systemVariables.currentTrip].timestampStop);
                     ++systemVariables.currentTrip;
                     systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
                     resetAccelerator();
                 } else {
-                    trips[systemVariables.currentTrip].timestampStart = millis();
+                    trips[systemVariables.currentTrip].timestampStart = createTimestampFromRTC(rtc->getDateTime());
 
-                    Serial.print("Timestamp: ");
-                    Serial.println(trips[systemVariables.currentTrip].timestampStart);
+                    Serial.print("Start Timestamp: ");
+                    writeSerialRTCDateObj(trips[systemVariables.currentTrip].timestampStart);
 
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
                 break;
             case INTERFACE_SYNC_GPS_TIME:
                 writeSerialString("SYNCING GPS TIME");
-                Serial.print("Current RTC");
+                Serial.print("Current RTC: ");
                 writeSerialRTCTime();
                 setRTCTime(rtc);
-                // Serial.print("RTC after");
-                // writeSerialRTCTime();
+                Serial.print("RTC after: ");
+                writeSerialRTCTime();
             case INTERFACE_DEBUG:
                 // Outputs debug information
                 writeSerialString(interfaceEvent.serialString);

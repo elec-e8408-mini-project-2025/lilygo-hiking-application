@@ -7,6 +7,9 @@
 class PCF8563_Class; // Forward declaration instead of including the whole header
 extern PCF8563_Class *rtc;
 
+struct RTC_Date;
+struct timeStamp;
+
 typedef enum {
     SER_READY,
     SER_NOT_READY,
@@ -28,5 +31,9 @@ void writeSerialString(char * data);
 void writeSerial(char * data, int dataLen);
 
 void writeSerialRTCTime();
+
+void writeSerialRTCDateObj(RTC_Date date);
+
+void writeSerialRTCDateObj(timeStamp date);
 
 #endif
