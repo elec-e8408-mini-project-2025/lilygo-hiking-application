@@ -35,6 +35,7 @@ typedef struct systemGlobals {
     int currentTrip;
     int maxTrips;
     bool hasActiveSession;
+    bool GPSavailable;
 } systemGlobals;
 
 

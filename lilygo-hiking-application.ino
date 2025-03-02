@@ -16,7 +16,7 @@ RTC_Date date;
 #endif
 #ifdef LILYGO_WATCH_2020_V2
 #include "./src/gps.h"
-GPSPoint gpsPoint;
+GPSPoint gpspoint;
 #endif
 
 
@@ -27,8 +27,10 @@ tripData trips[] = {
     {2, 0, 0, 0, false},
     {3, 0, 0, 0, false},
     {4, 0, 0, 0, false},
+    {5, 0, 0, 0, false},
 };
 
+tripData *trip = &trips[0];
 
 // Global loop counter
 long loopCounter = 0;
@@ -48,7 +50,7 @@ const uint32_t sessionViewRefreshRate = sessionViewRefreshIntervalMs / delayInMi
 const uint32_t gpsPollIntervalMs = 10000;
 const uint32_t gpsPollRate = gpsPollIntervalMs / delayInMilliSeconds;
 
-systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false};
+systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false, false};
 int tripId = 0;
 
 void setup()
@@ -86,26 +88,38 @@ void loop()
 
     if (systemVariables.hasActiveSession)
     {
-        trips[systemVariables.currentTrip].stepCount =  handleTasksAccelerator();
-        // #ifdef LILYGO_WATCH_2020_V2
-        // updateGPS();
-        // if (loopCounter % gpsPollRate == 0 || systemVariables.hasActiveSession) {
-        //     gpsPoint = takeStep();
-        //     trips[systemVariables.currentTrip].distance += gpsPoint.dist;
-        // }
-        // #endif
-        // #ifndef LILYGO_WATCH_2020_V2
-        trips[systemVariables.currentTrip].distance = trips[systemVariables.currentTrip].stepCount * systemVariables.step_length / 1000;
-        // #endif
+        trip->stepCount =  handleTasksAccelerator();
+        #ifdef LILYGO_WATCH_2020_V2
+        updateGPS();
+        // systemVariables.GPSavailable = isGPSavailable();
+        if (loopCounter % gpsPollRate == 0) {
+            gpspoint = takeStep();
+            trip->distance += gpspoint.dist / 1000;
+        }
+        #endif
+        #ifndef LILYGO_WATCH_2020_V2
+        trip->distance = trip->stepCount * systemVariables.step_length / 1000;
+        #endif
         date = rtc->getDateTime();
-        timeStamp timeNow =  createTimestampFromRTC(date);
+        timeStamp timeNow = createTimestampFromRTC(date);
 
         float secondsPassed = getTimeDifference(trips[systemVariables.currentTrip].timestampStart, timeNow);
         if (secondsPassed < 1) {
-            trips[systemVariables.currentTrip].avgSpeed = 0;
+            trip->avgSpeed = 0;
         } else {
-            trips[systemVariables.currentTrip].avgSpeed = trips[systemVariables.currentTrip].distance / (secondsPassed / 3600);
+            trip->avgSpeed = trip->distance / (secondsPassed / 3600);
         }
+        // Serial.print("Id: ");
+        // Serial.print(trip->tripID);
+        // Serial.print(", distance: ");
+        // Serial.print(trip->distance);
+        // Serial.print(", speed: ");
+        // Serial.print(trip->avgSpeed);
+        // Serial.print(", steps: ");
+        // Serial.print(trip->stepCount);
+        // Serial.print(", seconds: ");
+        // Serial.println(secondsPassed);
+
 
     }
 
@@ -113,7 +127,7 @@ void loop()
     
     if (loopCounter % displayRefreshRate == 0 || (isRefreshSessionView && systemVariables.hasActiveSession)) {
 
-        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView, trips);
+        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, trip, &systemVariables, isRefreshSessionView, trips);
         
         switch (interfaceEvent.event)
         {
@@ -125,26 +139,29 @@ void loop()
                     Serial.print("Current trip: ");
                     Serial.println(systemVariables.currentTrip);
                     Serial.print("Step count: ");
-                    Serial.println(trips[systemVariables.currentTrip].stepCount);
+                    Serial.println(trip->stepCount);
                     writeSerialString("Stopping session!");
                     date = rtc->getDateTime();
-                    trips[systemVariables.currentTrip].timestampStop = createTimestampFromRTC(date);
+                    trip->timestampStop = createTimestampFromRTC(date);
                     Serial.print("Stop Timestamp: ");
-                    writeSerialRTCDateObj(trips[systemVariables.currentTrip].timestampStop);
+                    writeSerialRTCDateObj(trip->timestampStop);
                     ++systemVariables.currentTrip;
                     ++tripId;
                     systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
                     trips[systemVariables.currentTrip] = {tripId, 0, 0, 0, false};
+                    trip = &trips[systemVariables.currentTrip];
+                    resetAccelerator();
                 } else {
                     resetAccelerator();
                     date = rtc->getDateTime();
-                    trips[systemVariables.currentTrip].timestampStart = createTimestampFromRTC(date);
+                    trip->timestampStart = createTimestampFromRTC(date);
 
                     Serial.print("Start Timestamp: ");
-                    writeSerialRTCDateObj(trips[systemVariables.currentTrip].timestampStart);
+                    writeSerialRTCDateObj(trip->timestampStart);
 
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
+                // Serial.println(systemVariables.hasActiveSession);
                 break;
             case INTERFACE_SYNC_GPS_TIME:
                 writeSerialString("SYNCING GPS TIME");
@@ -155,11 +172,11 @@ void loop()
                 writeSerialRTCTime();
             case INTERFACE_DEBUG:
                 // Outputs debug information
-                writeSerialString(interfaceEvent.serialString);
+                // writeSerialString(interfaceEvent.serialString);
                 // writeSerialRTCTime(rtc);
                 // writeSerialRTCTime(rtc->getDateTime());
                 //Serial.println(rtc->formatDateTime());
-                writeSerialRTCTime();
+                // writeSerialRTCTime();
                 case INTERFACE_IDLE:
                 break;
             default:

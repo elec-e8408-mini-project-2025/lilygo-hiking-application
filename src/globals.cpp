@@ -16,9 +16,9 @@ timeStamp createTimestampFromRTC(RTC_Date date)
 
 float getTimeDifference(timeStamp start, timeStamp stop)
 {
-    float hoursPassedInSeconds = (start.hour - stop.hour) * 3600;
-    float minutesPassedInSeconds = (start.minute - stop.minute) * 60;
-    float secondsPassed = (start.second - stop.second) + minutesPassedInSeconds + hoursPassedInSeconds;
+    float hoursPassedInSeconds = (stop.hour - start.hour) * 3600;
+    float minutesPassedInSeconds = (stop.minute - start.minute) * 60;
+    float secondsPassed = (stop.second - start.second) + minutesPassedInSeconds + hoursPassedInSeconds;
     return secondsPassed;
 }
 

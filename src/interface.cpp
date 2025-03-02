@@ -10,6 +10,7 @@
 // For toggling display state
 bool displayOn = true;
 bool irqPEK = false;
+bool GPSavailable = false;
 
 uint32_t stepCount = 0;
 float step_length = 0.76;
@@ -88,15 +89,12 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             returnData.serialString = "Toggle Session";
             returnData.event = INTERFACE_TOGGLE_SESSION;
             //Serial.println("Toggle Session");
-            if (!hasActiveSession)
-            {
-                // Empty step count to prevent screen from rendering old count before reset
-                // stepCount = 0;
-                // Reset counter
-                // TODO: Bring this from sensor module
-                // sensor->resetStepCounter();
-            }
-            hasActiveSession = !hasActiveSession;
+
+            // Empty step count to prevent screen from rendering old count before reset
+            stepCount = 0;
+            avgSpeed = 0.0;
+            distance = 0.0;
+            // hasActiveSession = !hasActiveSession;
         }
         else if (obj == manual_sync_btn)
         {
@@ -119,17 +117,12 @@ void updatePastSessionData() {
             continue;
         }
         takenTripsCounter++;
-        float seconds = (pastTrips[i].timestampStop - pastTrips[i].timestampStart) / 1000;
-        float distance = pastTrips[i].stepCount * step_length / 1000;
-        float speed;
-        if (seconds < 1) {
-            speed = 0;            
-        } else {
-            speed = distance / (seconds / 3600);
-        }
+        float distance = pastTrips[i].distance;
+        float speed = pastTrips[i].avgSpeed;
+        int id = pastTrips[i].tripID;
         // TODO: as a future refactor this String formation could be made more efficient
-        Serial.print("Seconds: ");
-        Serial.print(seconds);
+        Serial.print("Id: ");
+        Serial.print(id);
         Serial.print(", distance: ");
         Serial.print(distance);
         Serial.print(", speed: ");
@@ -137,7 +130,7 @@ void updatePastSessionData() {
         data += String("25-02-28: " + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
     }
 
-    Serial.println(data);
+    // Serial.println(data);
     // Each table cell has 12 characters 
 
     if (data.length() > 0) {
@@ -233,7 +226,7 @@ void createSessionView()
     distanceValue = lv_label_create(session_view, NULL);
     lv_obj_add_style(distanceValue, LV_OBJ_PART_MAIN, &lbl_style_white);
     char lblDistanceValue[32]; // Make sure buffer is large enough
-    sprintf(lblDistanceValue, "%.2f", stepCount * step_length / 1000);
+    sprintf(lblDistanceValue, "%.2f", distance);
     lv_label_set_text(distanceValue, lblDistanceValue);
     lv_obj_align(distanceValue, session_view, LV_ALIGN_IN_TOP_RIGHT, -60, 40);
 
@@ -288,7 +281,7 @@ void refreshSessionView()
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
     if (session_view == lv_scr_act())
     {
-        Serial.println("refreshSessionView.cleanAndLoadSessionView");
+        // Serial.println("refreshSessionView.cleanAndLoadSessionView");
         returnData.event = INTERFACE_DEBUG;
         returnData.serialString = "Refreshing sessiong view";
         // Update stepCount value
@@ -301,19 +294,19 @@ void refreshSessionView()
         sprintf(lblTextstepCount, "%u", stepCount);
         lv_label_set_text(stepsValue, lblTextstepCount);
 
-        Serial.println("avg speed update");
+        // Serial.println("avg speed update");
 
         char lblTextAvgSpeedValue[32]; // Ensure the buffer is large enough
         sprintf(lblTextAvgSpeedValue, "%.2f", avgSpeed);
         lv_label_set_text(avgSpeedValue, lblTextAvgSpeedValue);
 
-        Serial.print("Distance: ");
-        Serial.print(distance);
+        // Serial.print("Distance: ");
+        // Serial.print(distance);
         // Serial.print(", Seconds passed: ");
         // Serial.print(secondsPassed);
-        Serial.print(" Speed: ");
-        Serial.println(avgSpeed);
-        Serial.println("only button to be updated");
+        // Serial.print(" Speed: ");
+        // Serial.println(avgSpeed);
+        // Serial.println("only button to be updated");
     }
         
     if (hasActiveSession)
@@ -376,7 +369,7 @@ void createPastSessionsView()
     // Label for steps
     past_sessions_data = lv_label_create(past_sessions_view, NULL);
     lv_label_set_text(past_sessions_data, "NO HIKING SESSIONS TO SHOW.\n TAKE YOUR WATCH ON A HIKE!");
-    lv_obj_align(past_sessions_data, past_sessions_view, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(past_sessions_data, past_sessions_view, LV_ALIGN_CENTER, 0, -60);
     lv_obj_add_style(past_sessions_data, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Button for Main Menu
@@ -542,6 +535,7 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
     
+    hasActiveSession = systemVariables->hasActiveSession;
     stepCount = trip->stepCount;
     avgSpeed = trip->avgSpeed;
     distance = trip->distance;
