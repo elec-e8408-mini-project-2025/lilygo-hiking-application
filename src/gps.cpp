@@ -105,19 +105,31 @@ double getLon() {
 //     return gps->date.value();
 // }
 
+bool isGPSavailable()
+{
+    return gps->location.isUpdated() && gps->location.isValid();
+}
+
 GPSPoint takeStep() {
-    double lat = getLat();
-    double lon = getLon();
+    double lat = 0;
+    double lon = 0;
     double dist = 0;
-    if (lastLat == NULL || lastLon == NULL) {
-        lastLat = lat;
-        lastLon = lon;
-    } else {
-        dist = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon);
+    if (isGPSavailable()) {
+        lat = getLat();
+        lon = getLon();
+        if (lastLat == NULL || lastLon == NULL) {
+            lastLat = lat;
+            lastLon = lon;
+        } else {
+            dist = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon);
+        }
     }
+    
     GPSPoint point = {lat, lon, dist};
     return point;
 }
+
+
 
 /*
 uint8_t, uint8_t, uint8_t getTime() {

@@ -25,4 +25,6 @@ GPSPoint takeStep();
 
 void setRTCTime(PCF8563_Class *rtc);
 
+bool isGPSavailable();
+
 #endif
