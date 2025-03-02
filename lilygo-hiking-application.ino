@@ -15,6 +15,7 @@ PCF8563_Class *rtc;
 #endif
 #ifdef LILYGO_WATCH_2020_V2
 #include "./src/gps.h"
+GPSPoint gpsPoint;
 #endif
 
 
@@ -41,6 +42,10 @@ const uint32_t displayRefreshRate = displayRefreshIntervalMs / delayInMilliSecon
 // interval in milliseconds for updating session view data
 const uint32_t sessionViewRefreshIntervalMs = 250;
 const uint32_t sessionViewRefreshRate = sessionViewRefreshIntervalMs / delayInMilliSeconds;
+
+// interval in milliseconds for getting gps data
+const uint32_t gpsPollIntervalMs = 10000;
+const uint32_t gpsPollRate = gpsPollIntervalMs / delayInMilliSeconds;
 
 systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false};
 
@@ -74,12 +79,17 @@ void loop()
 {
     #ifdef LILYGO_WATCH_2020_V2
     updateGPS();
+    if (loopCounter % gpsPollRate == 0 || systemVariables.hasActiveSession) {
+        gpsPoint = takeStep();
+        trips[systemVariables.currentTrip].distance += gpsPoint.dist;
+    }
     #endif
+
 // Touch Screen interface
 #ifndef ESP32_WROOM_32
     bool isRefreshSessionView = loopCounter % sessionViewRefreshRate == 0;
     
-    if (loopCounter % displayRefreshRate == 0 || isRefreshSessionView) {
+    if (loopCounter % displayRefreshRate == 0 || (isRefreshSessionView && systemVariables.hasActiveSession)) {
         
         interfaceEvent interfaceEvent = handleTasksInterface(ttgo, rtc, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView);
 

@@ -267,7 +267,7 @@ void refreshSessionView(PCF8563_Class *rtc)
         Serial.println(avgSpeed);
         
     }
-
+    Serial.println("only button to be updated");
     if (hasActiveSession)
     {
         lv_label_set_text(toggle_session_lbl, "Stop");
