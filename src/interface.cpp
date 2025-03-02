@@ -351,10 +351,10 @@ void createSettingsView()
     // Sync clock button
     sync_clock_btn = lv_btn_create(settings_view, NULL);
     lv_obj_set_event_cb(sync_clock_btn, event_handler); // Set event handler
-    lv_obj_align(sync_clock_btn, settings_view, LV_ALIGN_CENTER, 0, -50);
+    lv_obj_align(sync_clock_btn, settings_view, LV_ALIGN_CENTER, 0, 0);
 
     lv_obj_t *sync_clock_lbl = lv_label_create(sync_clock_btn, NULL);
-    lv_label_set_text(sync_clock_lbl, "Manual sync");
+    lv_label_set_text(sync_clock_lbl, "Sync Time");
     lv_obj_add_style(sync_clock_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
     lv_obj_add_style(sync_clock_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
 
