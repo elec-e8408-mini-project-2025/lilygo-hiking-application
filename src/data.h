@@ -14,8 +14,7 @@ typedef struct timeStamp {
 
 typedef struct geoData {
     double latitude[GEO_MAX_SIZE]; 
-    double longitude[GEO_MAX_SIZE]; 
-    double distance;
+    double longitude[GEO_MAX_SIZE];
     int dataLen;
     timeStamp timestamp;
 } geoData;
@@ -24,9 +23,11 @@ typedef struct tripData {
     int tripID;
     uint32_t stepCount;
     float avgSpeed;
+    double distance;
+    bool synced;
     timeStamp timestampStart;
     timeStamp timestampStop;
-    geoData tripGeoData;
+    // geoData tripGeoData;
 } tripData;
 
 typedef struct systemGlobals {

@@ -4,12 +4,22 @@
 
 timeStamp createTimestampFromRTC(RTC_Date date)
 {
-    uint16_t year = date.year;
-    uint8_t month = date.month;
-    uint8_t day = date.day;
-    uint8_t hour = date.hour;
-    uint8_t minute = date.minute;
-    uint8_t second = date.second;
+    timeStamp stamp;
+    stamp.year = date.year;
+    stamp.month = date.month;
+    stamp.day = date.day;
+    stamp.hour = date.hour;
+    stamp.minute = date.minute;
+    stamp.second = date.second;
+    return stamp;
+}
+
+float getTimeDifference(timeStamp start, timeStamp stop)
+{
+    float hoursPassedInSeconds = (start.hour - stop.hour) * 3600;
+    float minutesPassedInSeconds = (start.minute - stop.minute) * 60;
+    float secondsPassed = (start.second - stop.second) + minutesPassedInSeconds + hoursPassedInSeconds;
+    return secondsPassed;
 }
 
 #endif

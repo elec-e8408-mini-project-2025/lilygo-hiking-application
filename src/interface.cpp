@@ -12,7 +12,9 @@ bool irqPEK = false;
 uint32_t stepCount = 0;
 float step_length = 0.8;
 float avgSpeed = 0.0;
+float distance = 0.0;
 timeStamp sessionStartTime;
+timeStamp currentTime;
 bool hasActiveSession = false;
 
 interfaceEvent returnData = {INTERFACE_IDLE, ""};
@@ -207,6 +209,9 @@ void createSessionView()
     lv_obj_align(toggle_session_btn, NULL, LV_ALIGN_CENTER, 0, 10);
 
     toggle_session_lbl = lv_label_create(toggle_session_btn, NULL);
+    lv_label_set_text(toggle_session_lbl, "Start");
+    lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
+    lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Button for Main Menu
     main_menu_btn1 = lv_btn_create(session_view, NULL);
@@ -223,19 +228,18 @@ void createSessionView()
  * Helper function that refreshes session view at predefined intervals
  * when session view is rendered
  */
-void refreshSessionView(PCF8563_Class *rtc)
+void refreshSessionView()
 {
     // Serial.println("refreshSesssionView.BEGIN");
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
     if (session_view == lv_scr_act())
     {
-        // Serial.println("refreshSessionView.cleanAndLoadSessionView");
+        Serial.println("refreshSessionView.cleanAndLoadSessionView");
         returnData.event = INTERFACE_DEBUG;
         returnData.serialString = "Refreshing sessiong view";
         // Update stepCount value
         // Update distance value
         char lblDistanceValue[32]; // Make sure buffer is large enough
-        float distance = stepCount * step_length / 1000;
         sprintf(lblDistanceValue, "%.2f", distance);
         lv_label_set_text(distanceValue, lblDistanceValue);
         // update step value
@@ -243,31 +247,21 @@ void refreshSessionView(PCF8563_Class *rtc)
         sprintf(lblTextstepCount, "%u", stepCount);
         lv_label_set_text(stepsValue, lblTextstepCount);
 
-        // update average speed
-        RTC_Date timeTemp = rtc->getDateTime();
-        timeStamp timeNow = createTimestampFromRTC(timeTemp);
-        float hoursPassedInSeconds = (timeNow.hour - sessionStartTime.hour) * 3600;
-        float minutesPassedInSeconds = (timeNow.minute - sessionStartTime.minute) * 60;
-        float secondsPassed = (timeNow.second - sessionStartTime.second) + minutesPassedInSeconds + hoursPassedInSeconds;
-        float avgSpeed; 
-        if (secondsPassed < 1) {
-            avgSpeed = 0;
-        } else {
-            avgSpeed = distance / (secondsPassed / 3600);
-        }
+        Serial.println("avg speed update");
+
         char lblTextAvgSpeedValue[32]; // Ensure the buffer is large enough
         sprintf(lblTextAvgSpeedValue, "%.2f", avgSpeed);
         lv_label_set_text(avgSpeedValue, lblTextAvgSpeedValue);
 
         Serial.print("Distance: ");
         Serial.print(distance);
-        Serial.print(", Seconds passed: ");
-        Serial.print(secondsPassed);
+        // Serial.print(", Seconds passed: ");
+        // Serial.print(secondsPassed);
         Serial.print(" Speed: ");
         Serial.println(avgSpeed);
-        
+        Serial.println("only button to be updated");
     }
-    Serial.println("only button to be updated");
+        
     if (hasActiveSession)
     {
         lv_label_set_text(toggle_session_lbl, "Stop");
@@ -487,13 +481,14 @@ void initInterface(TTGOClass *ttgo)
  * @param refreshSessionView indicates if sessionView is to be refreshed 
  * @return returnData an interface event that is handled in main ino-file
  */
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, PCF8563_Class *rtc, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
 {
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
     
     stepCount = trip->stepCount;
     avgSpeed = trip->avgSpeed;
+    distance = trip->distance;
     step_length = systemVariables->step_length;
     sessionStartTime = trip->timestampStart;
 
@@ -504,7 +499,7 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, PCF8563_Class *rtc, tripDat
 
     // refresh session view
     if (isRefreshSessionView) {
-        refreshSessionView(rtc);
+        refreshSessionView();
     }
     
 

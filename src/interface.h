@@ -35,6 +35,6 @@ void createPastSessionsView();
 
 void initInterface(TTGOClass *ttgo);
 
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, PCF8563_Class *rtc, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView);
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView);
 
 #endif
