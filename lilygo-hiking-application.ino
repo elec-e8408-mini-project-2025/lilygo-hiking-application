@@ -113,8 +113,8 @@ void loop()
     
     if (loopCounter % displayRefreshRate == 0 || (isRefreshSessionView && systemVariables.hasActiveSession)) {
 
-        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView);
-
+        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView, trips);
+        
         switch (interfaceEvent.event)
         {
             case INTERFACE_TOGGLE_SESSION:
