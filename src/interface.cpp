@@ -22,7 +22,7 @@ interfaceEvent returnData = {INTERFACE_IDLE, ""};
  * lv_obj_t: Create a base object (a rectangle)
  */
 lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
-lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
+lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn, *sync_clock_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 
 // GLobal style variables
@@ -87,7 +87,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             }
             hasActiveSession = !hasActiveSession;
         }
-        else if (obj == manual_sync_btn)
+        else if (obj == sync_clock_btn)
         {
             returnData.event = INTERFACE_SYNC_GPS_TIME;
         }
@@ -294,23 +294,33 @@ void createSettingsView()
     // Label for Settings
     lv_obj_t *settingsTitle = lv_label_create(settings_view, NULL);
     lv_label_set_text(settingsTitle, "Change settings here");
-    lv_obj_align(settingsTitle, NULL, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(settingsTitle, NULL, LV_ALIGN_CENTER, 0, -80);
     lv_obj_add_style(settingsTitle, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Manual sync button
     manual_sync_btn = lv_btn_create(settings_view, NULL);
     lv_obj_set_event_cb(manual_sync_btn, event_handler); // Set event handler
-    lv_obj_align(manual_sync_btn, settings_view, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(manual_sync_btn, settings_view, LV_ALIGN_CENTER, 0, -50);
 
     lv_obj_t *manual_sync_lbl = lv_label_create(manual_sync_btn, NULL);
     lv_label_set_text(manual_sync_lbl, "Manual sync");
     lv_obj_add_style(manual_sync_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
     lv_obj_add_style(manual_sync_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
 
+    // Sync clock button
+    sync_clock_btn = lv_btn_create(settings_view, NULL);
+    lv_obj_set_event_cb(sync_clock_btn, event_handler); // Set event handler
+    lv_obj_align(sync_clock_btn, settings_view, LV_ALIGN_CENTER, 0, -50);
+
+    lv_obj_t *sync_clock_lbl = lv_label_create(sync_clock_btn, NULL);
+    lv_label_set_text(sync_clock_lbl, "Manual sync");
+    lv_obj_add_style(sync_clock_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
+    lv_obj_add_style(sync_clock_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
+
     // Button for Main Menu
     main_menu_btn2 = lv_btn_create(settings_view, NULL);
     lv_obj_set_event_cb(main_menu_btn2, event_handler); // Set event handler
-    lv_obj_align(main_menu_btn2, settings_view, LV_ALIGN_CENTER, 0, 60);
+    lv_obj_align(main_menu_btn2, settings_view, LV_ALIGN_CENTER, 0, 50);
 
     lv_obj_t *main_menu_lbl = lv_label_create(main_menu_btn2, NULL);
     lv_label_set_text(main_menu_lbl, "Main Menu");
