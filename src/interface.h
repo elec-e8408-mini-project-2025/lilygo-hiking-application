@@ -27,8 +27,10 @@ void createSettingsView();
 
 void createPastSessionsView();
 
+void updatePastSessionData();
+
 void initInterface(TTGOClass *ttgo);
 
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView);
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView, tripData * trips);
 
 #endif

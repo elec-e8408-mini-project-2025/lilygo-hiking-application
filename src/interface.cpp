@@ -1,5 +1,6 @@
 #ifndef ESP32_WROOM_32
 #include "interface.h"
+#include <string>
 // #include "globals.h"
 
 
@@ -8,10 +9,15 @@ bool displayOn = true;
 bool irqPEK = false;
 
 uint32_t stepCount = 0;
-float step_length = 0.8;
+float step_length = 0.76;
 float avgSpeed = 0.0;
 unsigned long sessionStartTime = 0;
 bool hasActiveSession = false;
+uint32_t nOfTrips = 0;
+
+
+tripData *pastTrips; 
+
 
 interfaceEvent returnData = {INTERFACE_IDLE, ""};
 
@@ -22,6 +28,7 @@ interfaceEvent returnData = {INTERFACE_IDLE, ""};
 lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
 lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
+lv_obj_t *past_sessions_data;
 
 // GLobal style variables
 // ref: https://docs.lvgl.io/8.0/overview/style.html
@@ -61,6 +68,7 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         {
             //Serial.println("Past Sessions");
             returnData.serialString = "Button click: Past Sessions";
+            updatePastSessionData();
             lv_scr_load(past_sessions_view); // load past sessions view
         }
         // TODO: This could perhaps be done more nicely?
@@ -86,6 +94,51 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             hasActiveSession = !hasActiveSession;
         }
     }
+}
+
+void updatePastSessionData() {
+    
+    Serial.print("Updating past session data, size of past trips: ");
+    Serial.println(nOfTrips);
+    uint32_t takenTripsCounter = 0;
+    
+    // Using Arduino String library
+    String data = "";
+    
+    for (int i = 0; i < nOfTrips; i++) {
+        if (pastTrips[i].stepCount == 0) {
+            continue;
+        }
+        takenTripsCounter++;
+        float seconds = (pastTrips[i].timestampStop - pastTrips[i].timestampStart) / 1000;
+        float distance = pastTrips[i].stepCount * step_length / 1000;
+        float speed;
+        if (seconds < 1) {
+            speed = 0;            
+        } else {
+            speed = distance / (seconds / 3600);
+        }
+        // TODO: as a future refactor this String formation could be made more efficient
+        Serial.print("Seconds: ");
+        Serial.print(seconds);
+        Serial.print(", distance: ");
+        Serial.print(distance);
+        Serial.print(", speed: ");
+        Serial.println(speed);
+        data += String("25-02-28: " + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
+    }
+
+    Serial.println(data);
+    // Each table cell has 12 characters 
+
+    if (data.length() > 0) {
+        Serial.print("Refreshing past sessions text label. Trips taken: ");
+        Serial.println(takenTripsCounter);
+        String header = "PAST HIKING SESSIONS: \n";
+        header += data;
+        lv_label_set_text(past_sessions_data, header.c_str());
+    }
+    
 }
 
 // Function to create the Main Menu view
@@ -317,10 +370,10 @@ void createPastSessionsView()
     lv_obj_add_style(past_sessions_view, LV_OBJ_PART_MAIN, &cont_style);
 
     // Label for steps
-    lv_obj_t *table_lbl = lv_label_create(past_sessions_view, NULL);
-    lv_label_set_text(table_lbl, "TABLE HERE");
-    lv_obj_align(table_lbl, past_sessions_view, LV_ALIGN_CENTER, 0, -40);
-    lv_obj_add_style(table_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
+    past_sessions_data = lv_label_create(past_sessions_view, NULL);
+    lv_label_set_text(past_sessions_data, "NO HIKING SESSIONS TO SHOW.\n TAKE YOUR WATCH ON A HIKE!");
+    lv_obj_align(past_sessions_data, past_sessions_view, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_add_style(past_sessions_data, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Button for Main Menu
     main_menu_btn3 = lv_btn_create(past_sessions_view, NULL);
@@ -344,6 +397,8 @@ void init_global_styles()
     // container style
     lv_style_init(&cont_style);
     lv_style_init(&cont_style);
+    // NOTE: Supported fonts are listed in lv_conf.h
+    lv_style_set_text_font(&cont_style, LV_STATE_DEFAULT, &lv_font_montserrat_14);
     lv_style_set_radius(&cont_style, LV_OBJ_PART_MAIN, 0);
     lv_style_set_bg_color(&cont_style, LV_OBJ_PART_MAIN, LV_COLOR_BLACK);
     lv_style_set_bg_opa(&cont_style, LV_OBJ_PART_MAIN, LV_OPA_COVER);
@@ -478,7 +533,7 @@ void initInterface(TTGOClass *ttgo)
  * @param refreshSessionView indicates if sessionView is to be refreshed 
  * @return returnData an interface event that is handled in main ino-file
  */
-interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView)
+interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlobals * systemVariables, bool isRefreshSessionView, tripData * trips)
 {
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
@@ -487,6 +542,8 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     avgSpeed = trip->avgSpeed;
     step_length = systemVariables->step_length;
     sessionStartTime = trip->timestampStart;
+    pastTrips = trips;
+    nOfTrips = systemVariables->maxTrips;
 
     lv_task_handler(); // Handle LVGL tasks
     
