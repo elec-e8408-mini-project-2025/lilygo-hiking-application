@@ -167,7 +167,9 @@ void loop()
                 writeSerialString("SYNCING GPS TIME");
                 Serial.print("Current RTC: ");
                 writeSerialRTCTime();
+                #ifdef LILYGO_WATCH_2020_V2
                 setRTCTime(rtc);
+                #endif
                 Serial.print("RTC after: ");
                 writeSerialRTCTime();
             case INTERFACE_DEBUG:
