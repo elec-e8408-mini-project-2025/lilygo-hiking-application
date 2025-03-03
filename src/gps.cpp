@@ -8,6 +8,10 @@ HardwareSerial *GNSS = NULL;
 double lastLat = NULL;
 double lastLon = NULL;
 
+double avgLat = 0;
+double avgLon = 0;
+int avgCount = 0;
+
 uint32_t last = 0;
 uint32_t updateTimeout = 0;
 
@@ -158,5 +162,42 @@ void setRTCTime(PCF8563_Class *rtc) {
     uint8_t second = gps->time.second();
     rtc->setDateTime(year, month, day, hour, minute, second);
 }
+
+void addValueToAverage()
+{
+    double lat = 0;
+    double lon = 0;
+    if (isGPSavailable()) {
+        lat = getLat();
+        lon = getLon();
+        avgLat = avgLat + lat;
+        avgLon = avgLon + lon;
+        avgCount++;
+    }
+}
+
+GPSPoint takeAverageStep()
+{
+    addValueToAverage();
+    double lat = 0;
+    double lon = 0;
+    double dist = 0;
+    lat = avgLat / avgCount;
+    lon = avgLon / avgCount;
+    GPSPoint point = {NULL, NULL, 0};
+    if (avgCount > 0) {
+        if (lastLat == NULL || lastLon == NULL) {
+            lastLat = lat;
+            lastLon = lon;
+        } else {
+            dist = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon);
+        }
+        point = {lat, lon, dist};
+    }
+    avgCount = 0;
+    avgLat = 0;
+    avgLon = 0;
+    return point;
+} 
 
 #endif
