@@ -2,8 +2,13 @@
 #define INTERFACE_H
 #define LILYGO_WATCH_LVGL
 #include <LilyGoWatch.h>
-#include <stdint.h>
 #include "data.h"
+#include <stdint.h>
+
+// class PCF8563_Class;
+// class TTGOClass;
+// struct tripData;
+// struct systemGlobals;
 
 typedef enum {
     INTERFACE_TOGGLE_SESSION,
@@ -11,7 +16,8 @@ typedef enum {
     INTERFACE_DISABLE_BLUETOOTH,
     INTERFACE_ENABLE_BLUETOOTH,
     INTERFACE_IDLE,
-    INTERFACE_DEBUG
+    INTERFACE_DEBUG,
+    INTERFACE_SYNC_GPS_TIME
 } interfaceEventType;
 
 typedef struct {

@@ -1,4 +1,5 @@
 #include "restful.h"
+#include "data.h"
 
 httpType restfulParseType(const char* data, const int *dataLen)
 {

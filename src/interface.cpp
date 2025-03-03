@@ -1,5 +1,8 @@
 #ifndef ESP32_WROOM_32
 #include "interface.h"
+#include <LilyGoWatch.h>
+#include "globals.h"
+#include "data.h"
 #include <string>
 // #include "globals.h"
 
@@ -7,11 +10,14 @@
 // For toggling display state
 bool displayOn = true;
 bool irqPEK = false;
+bool GPSavailable = false;
 
 uint32_t stepCount = 0;
 float step_length = 0.76;
 float avgSpeed = 0.0;
-unsigned long sessionStartTime = 0;
+float distance = 0.0;
+timeStamp sessionStartTime;
+timeStamp currentTime;
 bool hasActiveSession = false;
 uint32_t nOfTrips = 0;
 
@@ -26,7 +32,7 @@ interfaceEvent returnData = {INTERFACE_IDLE, ""};
  * lv_obj_t: Create a base object (a rectangle)
  */
 lv_obj_t *main_view, *settings_view, *session_view, *past_sessions_view;
-lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn;
+lv_obj_t *settings_btn, *manual_sync_btn, *session_btn, *past_sessions_btn, *sync_clock_btn;
 lv_obj_t *main_menu_btn1, *main_menu_btn2, *main_menu_btn3;
 lv_obj_t *past_sessions_data;
 
@@ -83,15 +89,16 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
             returnData.serialString = "Toggle Session";
             returnData.event = INTERFACE_TOGGLE_SESSION;
             //Serial.println("Toggle Session");
-            if (!hasActiveSession)
-            {
-                // Empty step count to prevent screen from rendering old count before reset
-                // stepCount = 0;
-                // Reset counter
-                // TODO: Bring this from sensor module
-                // sensor->resetStepCounter();
-            }
-            hasActiveSession = !hasActiveSession;
+
+            // Empty step count to prevent screen from rendering old count before reset
+            stepCount = 0;
+            avgSpeed = 0.0;
+            distance = 0.0;
+            // hasActiveSession = !hasActiveSession;
+        }
+        else if (obj == sync_clock_btn)
+        {
+            returnData.event = INTERFACE_SYNC_GPS_TIME;
         }
     }
 }
@@ -110,17 +117,12 @@ void updatePastSessionData() {
             continue;
         }
         takenTripsCounter++;
-        float seconds = (pastTrips[i].timestampStop - pastTrips[i].timestampStart) / 1000;
-        float distance = pastTrips[i].stepCount * step_length / 1000;
-        float speed;
-        if (seconds < 1) {
-            speed = 0;            
-        } else {
-            speed = distance / (seconds / 3600);
-        }
+        float distance = pastTrips[i].distance;
+        float speed = pastTrips[i].avgSpeed;
+        int id = pastTrips[i].tripID;
         // TODO: as a future refactor this String formation could be made more efficient
-        Serial.print("Seconds: ");
-        Serial.print(seconds);
+        Serial.print("Id: ");
+        Serial.print(id);
         Serial.print(", distance: ");
         Serial.print(distance);
         Serial.print(", speed: ");
@@ -128,7 +130,7 @@ void updatePastSessionData() {
         data += String("25-02-28: " + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
     }
 
-    Serial.println(data);
+    // Serial.println(data);
     // Each table cell has 12 characters 
 
     if (data.length() > 0) {
@@ -224,7 +226,7 @@ void createSessionView()
     distanceValue = lv_label_create(session_view, NULL);
     lv_obj_add_style(distanceValue, LV_OBJ_PART_MAIN, &lbl_style_white);
     char lblDistanceValue[32]; // Make sure buffer is large enough
-    sprintf(lblDistanceValue, "%.2f", stepCount * step_length / 1000);
+    sprintf(lblDistanceValue, "%.2f", distance);
     lv_label_set_text(distanceValue, lblDistanceValue);
     lv_obj_align(distanceValue, session_view, LV_ALIGN_IN_TOP_RIGHT, -60, 40);
 
@@ -254,6 +256,9 @@ void createSessionView()
     lv_obj_align(toggle_session_btn, NULL, LV_ALIGN_CENTER, 0, 10);
 
     toggle_session_lbl = lv_label_create(toggle_session_btn, NULL);
+    lv_label_set_text(toggle_session_lbl, "Start");
+    lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
+    lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Button for Main Menu
     main_menu_btn1 = lv_btn_create(session_view, NULL);
@@ -282,7 +287,6 @@ void refreshSessionView()
         // Update stepCount value
         // Update distance value
         char lblDistanceValue[32]; // Make sure buffer is large enough
-        float distance = stepCount * step_length / 1000;
         sprintf(lblDistanceValue, "%.2f", distance);
         lv_label_set_text(distanceValue, lblDistanceValue);
         // update step value
@@ -290,28 +294,21 @@ void refreshSessionView()
         sprintf(lblTextstepCount, "%u", stepCount);
         lv_label_set_text(stepsValue, lblTextstepCount);
 
-        // update average speed
-        unsigned long timeNow = millis();
-        float secondsPassed = (millis() - sessionStartTime) / 1000;
-        float avgSpeed; 
-        if (secondsPassed < 1) {
-            avgSpeed = 0;
-        } else {
-            avgSpeed = distance / (secondsPassed / 3600);
-        }
+        // Serial.println("avg speed update");
+
         char lblTextAvgSpeedValue[32]; // Ensure the buffer is large enough
         sprintf(lblTextAvgSpeedValue, "%.2f", avgSpeed);
         lv_label_set_text(avgSpeedValue, lblTextAvgSpeedValue);
 
-        Serial.print("Distance: ");
-        Serial.print(distance);
-        Serial.print(", Seconds passed: ");
-        Serial.print(secondsPassed);
-        Serial.print(" Speed: ");
-        Serial.println(avgSpeed);
-        
+        // Serial.print("Distance: ");
+        // Serial.print(distance);
+        // Serial.print(", Seconds passed: ");
+        // Serial.print(secondsPassed);
+        // Serial.print(" Speed: ");
+        // Serial.println(avgSpeed);
+        // Serial.println("only button to be updated");
     }
-
+        
     if (hasActiveSession)
     {
         lv_label_set_text(toggle_session_lbl, "Stop");
@@ -338,23 +335,33 @@ void createSettingsView()
     // Label for Settings
     lv_obj_t *settingsTitle = lv_label_create(settings_view, NULL);
     lv_label_set_text(settingsTitle, "Change settings here");
-    lv_obj_align(settingsTitle, NULL, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(settingsTitle, NULL, LV_ALIGN_CENTER, 0, -80);
     lv_obj_add_style(settingsTitle, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Manual sync button
     manual_sync_btn = lv_btn_create(settings_view, NULL);
     lv_obj_set_event_cb(manual_sync_btn, event_handler); // Set event handler
-    lv_obj_align(manual_sync_btn, settings_view, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(manual_sync_btn, settings_view, LV_ALIGN_CENTER, 0, -50);
 
     lv_obj_t *manual_sync_lbl = lv_label_create(manual_sync_btn, NULL);
     lv_label_set_text(manual_sync_lbl, "Manual sync");
     lv_obj_add_style(manual_sync_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
     lv_obj_add_style(manual_sync_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
 
+    // Sync clock button
+    sync_clock_btn = lv_btn_create(settings_view, NULL);
+    lv_obj_set_event_cb(sync_clock_btn, event_handler); // Set event handler
+    lv_obj_align(sync_clock_btn, settings_view, LV_ALIGN_CENTER, 0, 0);
+
+    lv_obj_t *sync_clock_lbl = lv_label_create(sync_clock_btn, NULL);
+    lv_label_set_text(sync_clock_lbl, "Sync Time");
+    lv_obj_add_style(sync_clock_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
+    lv_obj_add_style(sync_clock_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
+
     // Button for Main Menu
     main_menu_btn2 = lv_btn_create(settings_view, NULL);
     lv_obj_set_event_cb(main_menu_btn2, event_handler); // Set event handler
-    lv_obj_align(main_menu_btn2, settings_view, LV_ALIGN_CENTER, 0, 60);
+    lv_obj_align(main_menu_btn2, settings_view, LV_ALIGN_CENTER, 0, 50);
 
     lv_obj_t *main_menu_lbl = lv_label_create(main_menu_btn2, NULL);
     lv_label_set_text(main_menu_lbl, "Main Menu");
@@ -372,7 +379,7 @@ void createPastSessionsView()
     // Label for steps
     past_sessions_data = lv_label_create(past_sessions_view, NULL);
     lv_label_set_text(past_sessions_data, "NO HIKING SESSIONS TO SHOW.\n TAKE YOUR WATCH ON A HIKE!");
-    lv_obj_align(past_sessions_data, past_sessions_view, LV_ALIGN_CENTER, 0, -40);
+    lv_obj_align(past_sessions_data, past_sessions_view, LV_ALIGN_CENTER, 0, -60);
     lv_obj_add_style(past_sessions_data, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Button for Main Menu
@@ -538,8 +545,10 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
     returnData.serialString = "";
     returnData.event = INTERFACE_IDLE;
     
+    hasActiveSession = systemVariables->hasActiveSession;
     stepCount = trip->stepCount;
     avgSpeed = trip->avgSpeed;
+    distance = trip->distance;
     step_length = systemVariables->step_length;
     sessionStartTime = trip->timestampStart;
     pastTrips = trips;
