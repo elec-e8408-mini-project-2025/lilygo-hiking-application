@@ -1,4 +1,5 @@
 #ifndef ESP32_WROOM_32
+#ifdef LILYGO_WATCH_2020_V2
 #include "gps.h"
 #include <LilyGoWatch.h>
 
@@ -163,6 +164,7 @@ void setRTCTime(PCF8563_Class *rtc) {
     rtc->setDateTime(year, month, day, hour, minute, second);
 }
 
+
 void addValueToAverage()
 {
     double lat = 0;
@@ -200,4 +202,6 @@ GPSPoint takeAverageStep()
     return point;
 } 
 
+
+#endif
 #endif
