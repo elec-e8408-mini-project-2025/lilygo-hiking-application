@@ -29,14 +29,15 @@
 #define RESTFUL_ONE_TRIP_VIEW "{\
 \"Context\":\"/tripdata/%i\",\
 \"Description\":\"Individual trip data overview.\",\
+\"Data\":{\
 \"ID\":%i,\
 \"StartTimestamp\":\"%s\",\
 \"EndTimestamp\":\"%s\",\
 \"Steps\":%i,\
 \"AvgSpeed\":\"%f\",\
 \"Tag\":\"%i\",\
-\"Actions\":[\"/tripdata/%i/tagset\"],\
-\"GeoLocationPath\":null\
+\"GeoLocationPath\":null},\
+\"Actions\":[\"/tripdata/%i/tagset\"]\
 }\n"
 
 // Path: /tripdata/%i/GeoData
