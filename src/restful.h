@@ -34,6 +34,8 @@
 \"EndTimestamp\":\"%s\",\
 \"Steps\":%i,\
 \"AvgSpeed\":\"%f\",\
+\"Tag\":\"%i\",\
+\"Actions\":[\"/tripdata/%i/tagset\"],\
 \"GeoLocationPath\":null\
 }\n"
 
