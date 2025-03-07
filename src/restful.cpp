@@ -33,10 +33,10 @@ int restfulParseAddress(restfulPacket * packet, char * data, const int * dataLen
     switch (packet->type)
     {
         case RESTFUL_GET:
-            addressOffset = 4;
+            addressOffset = 4; // GET <-4 characters
             break;
         case RESTFUL_POST:
-            addressOffset = 5;
+            addressOffset = 8; // POST <- 8 characters
             break;
         default:
             return -1;
@@ -44,7 +44,14 @@ int restfulParseAddress(restfulPacket * packet, char * data, const int * dataLen
     };
     
     packet->addressData = data + addressOffset;
-    packet->addressLen = *dataLen - addressOffset;
+    if ( addressOffset > *dataLen )
+    {
+        packet->addressLen = 0;
+    }
+    else 
+    {
+        packet->addressLen = *dataLen - addressOffset;
+    }
 
     return 0;
 }
@@ -129,9 +136,48 @@ int getAddressContent(restfulPacket * packet, tripData *trips)
     return 0;
 }
 
+int setResponseSuccessAction(restfulPacket * packet)
+{
+    packet->responseLen = sprintf(packet->response, "%s", RESTFUL_SUCCESS_ACTION);
+    return 0;
+}
+
+int setTag(restfulPacket * packet, tripData *trips)
+{
+
+    int tripId = packet->addressData[packet->addressLen - 1 - 7] - '0';
+
+    if ( tripId < MAX_CACHED_TRIPS)
+    {
+        ++trips[tripId].tag;
+        setResponseSuccessAction(packet);
+    }
+    else
+    {
+        setResponseError(packet);
+    }
+    return 0;
+}
+
 int postAddressContent(restfulPacket * packet, tripData *trips)
 {
-    packet->type = RESTFUL_ERROR; // NOT YET IMPLEMENTED
+    if (packet->type == RESTFUL_ERROR)
+    {
+        setResponseError(packet);
+        return 0;
+    }
+
+    switch(packet->addressLen)
+    {
+        case sizeof(RESTFUL_TRIP_ACTION_SET_TAG) - 2:
+            setTag(packet, trips);
+            break;
+        default:
+            setResponseError(packet);
+            break;
+    }
+
+    // packet->type = RESTFUL_ERROR; // NOT YET IMPLEMENTED
     return 0;
 }
 
@@ -148,7 +194,12 @@ restfulPacket restfulHandlePacket(char *data, const int *dataLen, tripData *trip
     };
 
     parseRestfulPacket(&ret, data, dataLen);
-
+    
+    if (ret.addressLen == 0)
+    {
+        setResponseError(&ret);
+        return ret;
+    }
     switch (ret.type)
     {
         case RESTFUL_GET:

@@ -49,6 +49,13 @@
 \"Description\":\"Unable to respond to request.\"\
 }\n"
 
+
+// Here is listed all possible actions (POST {} <path>
+#define RESTFUL_TRIP_ACTION_SET_TAG "/tripdata/%i/tagset"
+
+
+#define RESTFUL_SUCCESS_ACTION "{\"Description\":\"Message info for post messages.\",\"Message\":\"OK\"}\n"
+
 enum restfulTripStatus{
     SYNCED,
     NOT_SYNCED,
