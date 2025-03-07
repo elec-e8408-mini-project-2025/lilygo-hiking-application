@@ -161,14 +161,15 @@ void loop()
                     trip->timestampStop = createTimestampFromRTC(date);
                     Serial.print("Stop Timestamp: ");
                     writeSerialRTCDateObj(trip->timestampStop);
-                    ++systemVariables.currentTrip;
                     ++tripId;
-                    systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
-                    trips[systemVariables.currentTrip] = {tripId, 0, 0, 0, false};
-                    trip = &trips[systemVariables.currentTrip];
+                    int nextTrip = (systemVariables.currentTrip + 1) % (systemVariables.maxTrips); // If 5 it goes back to 0
+                    trips[nextTrip] = {tripId, 0, 0, 0, false};
                     resetAccelerator();
                 } else {
                     resetAccelerator();
+                    ++systemVariables.currentTrip;
+                    systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips);
+                    trip = &trips[systemVariables.currentTrip];
                     date = rtc->getDateTime();
                     trip->timestampStart = createTimestampFromRTC(date);
 
