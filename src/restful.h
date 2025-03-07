@@ -30,8 +30,8 @@
 \"Context\":\"/tripdata/%i\",\
 \"Description\":\"Individual trip data overview.\",\
 \"ID\":%i,\
-\"StartTimestamp\":\"%d\",\
-\"EndTimestamp\":\"%d\",\
+\"StartTimestamp\":\"%s\",\
+\"EndTimestamp\":\"%s\",\
 \"Steps\":%i,\
 \"AvgSpeed\":\"%f\",\
 \"GeoLocationPath\":null\

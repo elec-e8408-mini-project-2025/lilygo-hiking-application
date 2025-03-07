@@ -90,7 +90,11 @@ int setResponseOneTrip(restfulPacket * packet, tripData *trips)
 {
     int tripId = packet->addressData[packet->addressLen - 1] - '0';
     tripData trip = trips[tripId];
-    packet->responseLen = sprintf(packet->response, RESTFUL_ONE_TRIP_VIEW, trip.tripID, trip.tripID, trip.timestampStart, trip.timestampStop, trip.stepCount, trip.avgSpeed);
+    char startTimeStamp[32] = "";
+    char stopTimeStamp[32] = "";
+    sprintf(startTimeStamp, "%u-%u-%u %u:%u:%u", trip.timestampStart.year, trip.timestampStart.month, trip.timestampStart.day, trip.timestampStart.hour, trip.timestampStart.minute, trip.timestampStart.second);
+    sprintf(stopTimeStamp, "%u-%u-%u %u:%u:%u", trip.timestampStop.year, trip.timestampStop.month, trip.timestampStop.day, trip.timestampStop.hour, trip.timestampStop.minute, trip.timestampStop.second);
+    packet->responseLen = sprintf(packet->response, RESTFUL_ONE_TRIP_VIEW, trip.tripID, trip.tripID, startTimeStamp, stopTimeStamp, trip.stepCount, trip.avgSpeed);
     return 0;
 }
 
