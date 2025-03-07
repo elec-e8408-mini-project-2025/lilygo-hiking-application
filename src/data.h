@@ -27,6 +27,7 @@ typedef struct tripData {
     bool synced;
     timeStamp timestampStart;
     timeStamp timestampStop;
+    int tag; // a integer tag controlled outside the clock. It gets cleared on new session.
     // geoData tripGeoData;
 } tripData;
 

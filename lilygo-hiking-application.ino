@@ -22,12 +22,12 @@ GPSPoint gpspoint;
 
 // System data (Global Variables)
 tripData trips[] = {
-    {0, 0, 0, 0, false},
-    {1, 0, 0, 0, false},
-    {2, 0, 0, 0, false},
-    {3, 0, 0, 0, false},
-    {4, 0, 0, 0, false},
-    {5, 0, 0, 0, false},
+    {0, 0, 0, 0, false, 0},
+    {1, 0, 0, 0, false, 0},
+    {2, 0, 0, 0, false, 0},
+    {3, 0, 0, 0, false, 0},
+    {4, 0, 0, 0, false, 0},
+    {5, 0, 0, 0, false, 0},
 };
 
 tripData *trip = &trips[0];
@@ -163,7 +163,7 @@ void loop()
                     writeSerialRTCDateObj(trip->timestampStop);
                     ++tripId;
                     int nextTrip = (systemVariables.currentTrip + 1) % (systemVariables.maxTrips); // If 5 it goes back to 0
-                    trips[nextTrip] = {tripId, 0, 0, 0, false};
+                    trips[nextTrip] = {tripId, 0, 0, 0, false, 0};
                     resetAccelerator();
                 } else {
                     resetAccelerator();
