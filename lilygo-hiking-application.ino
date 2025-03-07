@@ -50,6 +50,9 @@ const uint32_t sessionViewRefreshRate = sessionViewRefreshIntervalMs / delayInMi
 const uint32_t gpsPollIntervalMs = 10000;
 const uint32_t gpsPollRate = gpsPollIntervalMs / delayInMilliSeconds;
 
+const uint32_t gpsAveragePointsInInterval = 5;
+const uint32_t gpsAveragePollRate = gpsPollRate / gpsAveragePointsInInterval;
+
 systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false, false};
 int tripId = 0;
 
@@ -92,14 +95,26 @@ void loop()
         #ifdef LILYGO_WATCH_2020_V2
         updateGPS();
         // systemVariables.GPSavailable = isGPSavailable();
-        if (loopCounter % gpsPollRate == 0) {
-            gpspoint = takeStep();
-            trip->distance += gpspoint.dist / 1000;
+        if (loopCounter % gpsAveragePollRate == 0) {
+            addValueToAverage();
         }
+        if (loopCounter % gpsPollRate == 0) {
+            gpspoint = takeAverageStep();
+            trip->distance += gpspoint.dist / 1000;
+            date = rtc->getDateTime();
+            timeStamp timeNow = createTimestampFromRTC(date);
+
+            float secondsPassed = getTimeDifference(trips[systemVariables.currentTrip].timestampStart, timeNow);
+            if (secondsPassed < 1) {
+                trip->avgSpeed = 0;
+            } else {
+                trip->avgSpeed = trip->distance / (secondsPassed / 3600);
+            }
+        }
+        
         #endif
         #ifndef LILYGO_WATCH_2020_V2
         trip->distance = trip->stepCount * systemVariables.step_length / 1000;
-        #endif
         date = rtc->getDateTime();
         timeStamp timeNow = createTimestampFromRTC(date);
 
@@ -109,6 +124,7 @@ void loop()
         } else {
             trip->avgSpeed = trip->distance / (secondsPassed / 3600);
         }
+        #endif
         // Serial.print("Id: ");
         // Serial.print(trip->tripID);
         // Serial.print(", distance: ");
@@ -145,14 +161,15 @@ void loop()
                     trip->timestampStop = createTimestampFromRTC(date);
                     Serial.print("Stop Timestamp: ");
                     writeSerialRTCDateObj(trip->timestampStop);
-                    ++systemVariables.currentTrip;
                     ++tripId;
-                    systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips); // If 5 it goes back to 0
-                    trips[systemVariables.currentTrip] = {tripId, 0, 0, 0, false};
-                    trip = &trips[systemVariables.currentTrip];
+                    int nextTrip = (systemVariables.currentTrip + 1) % (systemVariables.maxTrips); // If 5 it goes back to 0
+                    trips[nextTrip] = {tripId, 0, 0, 0, false};
                     resetAccelerator();
                 } else {
                     resetAccelerator();
+                    ++systemVariables.currentTrip;
+                    systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips);
+                    trip = &trips[systemVariables.currentTrip];
                     date = rtc->getDateTime();
                     trip->timestampStart = createTimestampFromRTC(date);
 

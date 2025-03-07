@@ -27,4 +27,8 @@ void setRTCTime(PCF8563_Class *rtc);
 
 bool isGPSavailable();
 
+void addValueToAverage();
+
+GPSPoint takeAverageStep();
+
 #endif
