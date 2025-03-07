@@ -75,7 +75,7 @@ void setup()
 #endif
 
     // // Bluetooth interface
-    // initBluetooth();
+    initBluetooth();
 
     // Serial debugging interface
     initSerial();
@@ -216,12 +216,12 @@ void loop()
     }
 
     // // Bluetooth interface
-    // bluetoothBuffer bluetoothData = handleBluetoothByte();
-    // if (bluetoothData.status == BT_READY)
-    // {
-    //     restfulData = restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
-    //     writeBluetooth(restfulData.response, restfulData.responseLen);
-    // }
+    bluetoothBuffer bluetoothData = handleBluetoothByte();
+    if (bluetoothData.status == BT_READY)
+    {
+        restfulData = restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
+        writeBluetooth(restfulData.response, restfulData.responseLen);
+    }
 
     // Short delay to avoid overloading the processor
     ++loopCounter;
