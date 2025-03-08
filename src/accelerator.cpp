@@ -133,6 +133,7 @@ uint32_t handleTasksAccelerator()
 void resetAccelerator()
 {
     sensor->resetStepCounter();
+    currentSteps=0;
 }
 
 #endif
