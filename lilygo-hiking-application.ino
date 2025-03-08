@@ -26,11 +26,10 @@ tripData trips[] = {
     {1, 0, 0, 0, false, 0},
     {2, 0, 0, 0, false, 0},
     {3, 0, 0, 0, false, 0},
-    {4, 0, 0, 0, false, 0},
-    {5, 0, 0, 0, false, 0},
+    {4, 0, 0, 0, false, 0}
 };
 
-tripData *trip = &trips[0];
+//tripData *trip = &trips[0];
 
 // Global loop counter
 long loopCounter = 0;
@@ -54,7 +53,7 @@ const uint32_t gpsAveragePointsInInterval = 5;
 const uint32_t gpsAveragePollRate = gpsPollRate / gpsAveragePointsInInterval;
 
 systemGlobals systemVariables = {0.8, 0, sizeof(trips)  / sizeof(trips[0]), false, false};
-int tripId = 0;
+// int tripId = 0;
 
 void setup()
 {
@@ -91,7 +90,7 @@ void loop()
 
     if (systemVariables.hasActiveSession)
     {
-        trip->stepCount =  handleTasksAccelerator();
+        trips[systemVariables.currentTrip].stepCount =  handleTasksAccelerator();
         #ifdef LILYGO_WATCH_2020_V2
         updateGPS();
         // systemVariables.GPSavailable = isGPSavailable();
@@ -100,29 +99,29 @@ void loop()
         }
         if (loopCounter % gpsPollRate == 0) {
             gpspoint = takeAverageStep();
-            trip->distance += gpspoint.dist / 1000;
+            trips[systemVariables.currentTrip].distance += gpspoint.dist / 1000;
             date = rtc->getDateTime();
             timeStamp timeNow = createTimestampFromRTC(date);
 
             float secondsPassed = getTimeDifference(trips[systemVariables.currentTrip].timestampStart, timeNow);
             if (secondsPassed < 1) {
-                trip->avgSpeed = 0;
+                trips[systemVariables.currentTrip].avgSpeed = 0;
             } else {
-                trip->avgSpeed = trip->distance / (secondsPassed / 3600);
+                trips[systemVariables.currentTrip].avgSpeed = trips[systemVariables.currentTrip].distance / (secondsPassed / 3600);
             }
         }
         
         #endif
         #ifndef LILYGO_WATCH_2020_V2
-        trip->distance = trip->stepCount * systemVariables.step_length / 1000;
+        trips[systemVariables.currentTrip].distance = trips[systemVariables.currentTrip].stepCount * systemVariables.step_length / 1000;
         date = rtc->getDateTime();
         timeStamp timeNow = createTimestampFromRTC(date);
 
         float secondsPassed = getTimeDifference(trips[systemVariables.currentTrip].timestampStart, timeNow);
         if (secondsPassed < 1) {
-            trip->avgSpeed = 0;
+            trips[systemVariables.currentTrip].avgSpeed = 0;
         } else {
-            trip->avgSpeed = trip->distance / (secondsPassed / 3600);
+            trips[systemVariables.currentTrip].avgSpeed = trips[systemVariables.currentTrip].distance / (secondsPassed / 3600);
         }
         #endif
         // Serial.print("Id: ");
@@ -143,9 +142,18 @@ void loop()
     
     if (loopCounter % displayRefreshRate == 0 || (isRefreshSessionView && systemVariables.hasActiveSession)) {
 
-        interfaceEvent interfaceEvent = handleTasksInterface(ttgo, trip, &systemVariables, isRefreshSessionView, trips);
+        tripData * prevTrip = &trips[ (systemVariables.currentTrip + 4) % systemVariables.maxTrips]; // pointer to previous trip
+        interfaceEvent interface;
+        if (systemVariables.hasActiveSession) // if active session show current session
+        {
+            interface = handleTasksInterface(ttgo, &trips[systemVariables.currentTrip], &systemVariables, isRefreshSessionView, trips);
+        }
+        else // if no active session show previous session
+        {
+            interface = handleTasksInterface(ttgo, prevTrip, &systemVariables, isRefreshSessionView, trips);
+        }
         
-        switch (interfaceEvent.event)
+        switch (interface.event)
         {
             case INTERFACE_TOGGLE_SESSION:
                 // stopping session
@@ -155,26 +163,26 @@ void loop()
                     Serial.print("Current trip: ");
                     Serial.println(systemVariables.currentTrip);
                     Serial.print("Step count: ");
-                    Serial.println(trip->stepCount);
+                    Serial.println(trips[systemVariables.currentTrip].stepCount);
                     writeSerialString("Stopping session!");
                     date = rtc->getDateTime();
-                    trip->timestampStop = createTimestampFromRTC(date);
+                    trips[systemVariables.currentTrip].timestampStop = createTimestampFromRTC(date);
                     Serial.print("Stop Timestamp: ");
-                    writeSerialRTCDateObj(trip->timestampStop);
-                    ++tripId;
-                    int nextTrip = (systemVariables.currentTrip + 1) % (systemVariables.maxTrips); // If 5 it goes back to 0
-                    trips[nextTrip] = {tripId, 0, 0, 0, false, 0};
+                    writeSerialRTCDateObj(trips[systemVariables.currentTrip].timestampStop);
+                    //++tripId;
+                    systemVariables.currentTrip = (systemVariables.currentTrip + 1) % (systemVariables.maxTrips);
                     resetAccelerator();
                 } else {
-                    resetAccelerator();
-                    ++systemVariables.currentTrip;
-                    systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips);
-                    trip = &trips[systemVariables.currentTrip];
+                    resetAccelerator(); 
+                    trips[systemVariables.currentTrip] = {systemVariables.currentTrip, 0, 0, 0, false, 0};
+                    //++systemVariables.currentTrip;
+                    //systemVariables.currentTrip = systemVariables.currentTrip % (systemVariables.maxTrips);
+                    //trip = &trips[systemVariables.currentTrip];
                     date = rtc->getDateTime();
-                    trip->timestampStart = createTimestampFromRTC(date);
+                    trips[systemVariables.currentTrip].timestampStart = createTimestampFromRTC(date);
 
                     Serial.print("Start Timestamp: ");
-                    writeSerialRTCDateObj(trip->timestampStart);
+                    writeSerialRTCDateObj(trips[systemVariables.currentTrip].timestampStart);
 
                 }
                 systemVariables.hasActiveSession = !systemVariables.hasActiveSession;
