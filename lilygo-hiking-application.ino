@@ -227,8 +227,15 @@ void loop()
     bluetoothBuffer bluetoothData = handleBluetoothByte();
     if (bluetoothData.status == BT_READY)
     {
-        restfulData = restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
-        writeBluetooth(restfulData.response, restfulData.responseLen);
+        if (systemVariables.hasActiveSession) // ignore bluetooth requests if session is active to avoid reading active data
+        {
+            writeBluetooth("{}\n",3);
+        }
+        else
+        {
+            restfulData = restfulHandlePacket(bluetoothData.buf, &bluetoothData.bufLen, trips);
+            writeBluetooth(restfulData.response, restfulData.responseLen);
+        }
     }
 
     // Short delay to avoid overloading the processor
