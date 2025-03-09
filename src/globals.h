@@ -1,17 +1,13 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
+#include "data.h"
 
-/////////////////////// MOVED TO CORRESPONDING LIBRARIES
-// #include <LilyGoWatch.h>
+class RTC_Date;
 
-// extern TFT_eSPI *tft;
-// extern BMA *sensor;
-// extern bool irqAcc;
+timeStamp createTimestampFromRTC(RTC_Date date);
 
-// extern uint32_t stepCount;
-// extern const float step_length;
-// extern float avgSpeed;
-
-// extern bool hasActiveSession;
+// returns the time in seconds that has passed between the two
+// values
+float getTimeDifference(timeStamp start, timeStamp stop);
 
 #endif
