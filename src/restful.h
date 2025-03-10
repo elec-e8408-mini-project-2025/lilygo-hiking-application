@@ -29,12 +29,15 @@
 #define RESTFUL_ONE_TRIP_VIEW "{\
 \"Context\":\"/tripdata/%i\",\
 \"Description\":\"Individual trip data overview.\",\
+\"Data\":{\
 \"ID\":%i,\
-\"StartTimestamp\":\"%d\",\
-\"EndTimestamp\":\"%d\",\
+\"StartTimestamp\":\"%s\",\
+\"EndTimestamp\":\"%s\",\
 \"Steps\":%i,\
 \"AvgSpeed\":\"%f\",\
-\"GeoLocationPath\":null\
+\"Tag\":%i,\
+\"GeoLocationPath\":null},\
+\"Actions\":[\"/tripdata/%i/tagset\"]\
 }\n"
 
 // Path: /tripdata/%i/GeoData
@@ -46,6 +49,13 @@
 \"Context\":\"/error\",\
 \"Description\":\"Unable to respond to request.\"\
 }\n"
+
+
+// Here is listed all possible actions (POST {} <path>
+#define RESTFUL_TRIP_ACTION_SET_TAG "/tripdata/%i/tagset"
+
+
+#define RESTFUL_SUCCESS_ACTION "{\"Description\":\"Message info for post messages.\",\"Message\":\"OK\"}\n"
 
 enum restfulTripStatus{
     SYNCED,

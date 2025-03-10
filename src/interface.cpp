@@ -119,6 +119,8 @@ void updatePastSessionData() {
         takenTripsCounter++;
         float distance = pastTrips[i].distance;
         float speed = pastTrips[i].avgSpeed;
+        char startTimeStamp[32] = "";
+        sprintf(startTimeStamp, "%u-%u-%u ", pastTrips[i].timestampStart.year, pastTrips[i].timestampStart.month, pastTrips[i].timestampStart.day);
         int id = pastTrips[i].tripID;
         // TODO: as a future refactor this String formation could be made more efficient
         Serial.print("Id: ");
@@ -127,7 +129,7 @@ void updatePastSessionData() {
         Serial.print(distance);
         Serial.print(", speed: ");
         Serial.println(speed);
-        data += String("25-02-28: " + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
+        data += String( String(startTimeStamp) + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
     }
 
     // Serial.println(data);
