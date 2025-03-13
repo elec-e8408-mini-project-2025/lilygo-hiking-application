@@ -336,24 +336,14 @@ void createSettingsView()
 
     // Label for Settings
     lv_obj_t *settingsTitle = lv_label_create(settings_view, NULL);
-    lv_label_set_text(settingsTitle, "Change settings here");
+    lv_label_set_text(settingsTitle, "SETTINGS");
     lv_obj_align(settingsTitle, NULL, LV_ALIGN_CENTER, 0, -80);
     lv_obj_add_style(settingsTitle, LV_OBJ_PART_MAIN, &lbl_style_white);
-
-    // Manual sync button
-    manual_sync_btn = lv_btn_create(settings_view, NULL);
-    lv_obj_set_event_cb(manual_sync_btn, event_handler); // Set event handler
-    lv_obj_align(manual_sync_btn, settings_view, LV_ALIGN_CENTER, 0, -50);
-
-    lv_obj_t *manual_sync_lbl = lv_label_create(manual_sync_btn, NULL);
-    lv_label_set_text(manual_sync_lbl, "Manual sync");
-    lv_obj_add_style(manual_sync_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
-    lv_obj_add_style(manual_sync_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
 
     // Sync clock button
     sync_clock_btn = lv_btn_create(settings_view, NULL);
     lv_obj_set_event_cb(sync_clock_btn, event_handler); // Set event handler
-    lv_obj_align(sync_clock_btn, settings_view, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(sync_clock_btn, settings_view, LV_ALIGN_CENTER, 0, -50);
 
     lv_obj_t *sync_clock_lbl = lv_label_create(sync_clock_btn, NULL);
     lv_label_set_text(sync_clock_lbl, "Sync Time");
