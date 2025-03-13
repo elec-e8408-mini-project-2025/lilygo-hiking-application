@@ -155,7 +155,7 @@ uint8_t, uint8_t, uint8_t getDate() {
 
 void setRTCTime(PCF8563_Class *rtc) {
     Serial.println("updating GPS");
-    uint8_t year = gps->date.year();
+    uint8_t year = gps->date.year() - 8; // There is small offset in the year
     uint8_t month = gps->date.month();
     uint8_t day = gps->date.day();
     uint8_t hour = gps->time.hour();
