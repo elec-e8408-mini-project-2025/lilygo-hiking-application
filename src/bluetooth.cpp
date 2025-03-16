@@ -48,7 +48,6 @@ bluetoothBuffer handleBluetoothByte()
     }
     if(commandFinishedBT)
     {
-        // restfulPacket restfulData =  restfulHandlePacket(rxDataSer, &byteCountSer, trips);
         ret.buf = rxDataBT;
         ret.bufLen = byteCountBT;
         if(ret.bufLen)

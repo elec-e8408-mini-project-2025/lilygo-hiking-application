@@ -5,11 +5,10 @@
 #include "data.h"
 #include <stdint.h>
 
-// class PCF8563_Class;
-// class TTGOClass;
-// struct tripData;
-// struct systemGlobals;
-
+/*
+ * Interface event types are used to coordinate
+ * actions in main .ino file
+ */
 typedef enum {
     INTERFACE_TOGGLE_SESSION,
     INTERFACE_PAUSE_SESSION,

@@ -4,7 +4,6 @@
 #include "globals.h"
 #include "data.h"
 #include <string>
-// #include "globals.h"
 
 
 // For toggling display state
@@ -53,18 +52,15 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
     // ref: https://docs.lvgl.io/8/overview/event.html?highlight=lv_event_clicked#events
     if (event == LV_EVENT_CLICKED)
     {
-        //Serial.print("Button clicked: ");returnData
         returnData.event = INTERFACE_DEBUG;
 
         if (obj == settings_btn)
-        {
-            //Serial.println("Settings");
+        {   
             returnData.serialString = "Button click: Settings";
             lv_scr_load(settings_view); // Load the settings view
         }
         else if (obj == session_btn)
         {
-            //Serial.println("Session");
             returnData.serialString = "Button click: Session";
             lv_obj_clean(session_view);
             createSessionView();
@@ -72,7 +68,6 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         }
         else if (obj == past_sessions_btn)
         {
-            //Serial.println("Past Sessions");
             returnData.serialString = "Button click: Past Sessions";
             updatePastSessionData();
             lv_scr_load(past_sessions_view); // load past sessions view
@@ -80,7 +75,6 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         // TODO: This could perhaps be done more nicely?
         else if (obj == main_menu_btn1 || obj == main_menu_btn2 || obj == main_menu_btn3)
         {
-            //Serial.println("Main view");
             returnData.serialString = "Button click: Main view";
             lv_scr_load(main_view); // load main menu view
         }
@@ -88,7 +82,6 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
         {
             returnData.serialString = "Toggle Session";
             returnData.event = INTERFACE_TOGGLE_SESSION;
-            //Serial.println("Toggle Session");
 
             // Empty step count to prevent screen from rendering old count before reset
             stepCount = 0;
@@ -132,9 +125,7 @@ void updatePastSessionData() {
         data += String( String(startTimeStamp) + String(distance, 1) + " km " + String(speed, 1) + " km/h\n");
     }
 
-    // Serial.println(data);
     // Each table cell has 12 characters 
-
     if (data.length() > 0) {
         Serial.print("Refreshing past sessions text label. Trips taken: ");
         Serial.println(takenTripsCounter);
@@ -279,11 +270,11 @@ void createSessionView()
  */
 void refreshSessionView()
 {
-    // Serial.println("refreshSesssionView.BEGIN");
+    
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
     if (session_view == lv_scr_act())
     {
-        // Serial.println("refreshSessionView.cleanAndLoadSessionView");
+        
         returnData.event = INTERFACE_DEBUG;
         returnData.serialString = "Refreshing sessiong view";
         // Update stepCount value
@@ -296,19 +287,12 @@ void refreshSessionView()
         sprintf(lblTextstepCount, "%u", stepCount);
         lv_label_set_text(stepsValue, lblTextstepCount);
 
-        // Serial.println("avg speed update");
+        
 
         char lblTextAvgSpeedValue[32]; // Ensure the buffer is large enough
         sprintf(lblTextAvgSpeedValue, "%.2f", avgSpeed);
         lv_label_set_text(avgSpeedValue, lblTextAvgSpeedValue);
 
-        // Serial.print("Distance: ");
-        // Serial.print(distance);
-        // Serial.print(", Seconds passed: ");
-        // Serial.print(secondsPassed);
-        // Serial.print(" Speed: ");
-        // Serial.println(avgSpeed);
-        // Serial.println("only button to be updated");
     }
         
     if (hasActiveSession)
@@ -323,7 +307,7 @@ void refreshSessionView()
         lv_obj_add_style(toggle_session_btn, LV_OBJ_PART_MAIN, &btn_style_blue);
         lv_obj_add_style(toggle_session_lbl, LV_OBJ_PART_MAIN, &lbl_style_white);
     }
-    // Serial.println("refreshSesssionView.END");
+    
 }
 
 // Function to create Settings view
@@ -430,10 +414,10 @@ void init_global_styles()
  */
 void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
 {
-    // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
+    
     if (irqPEK)
     {
-        //Serial.println("PEK pressed");
+        
         irqPEK = false;
         ttgo->power->readIRQ();
 
@@ -452,15 +436,13 @@ void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
             {
                 // Turn touchscreen off
                 ttgo->displaySleep();
-                ttgo->power->setPowerOutPut(AXP202_LDO2, false);
-                //Serial.println("Touchscreen turned off");
+                ttgo->power->setPowerOutPut(AXP202_LDO2, false);        
             }
             else
             {
                 // Turn touchscreen back on
                 ttgo->displayWakeup();
                 ttgo->power->setPowerOutPut(AXP202_LDO2, true);
-                //Serial.println("Touchscreen turned on");
             }
 
             // Toggle display state
@@ -469,7 +451,6 @@ void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
 
         ttgo->power->clearIRQ();
 
-        // Serial.println("loopWakeUpFormTouchScreen.END");
     }
 }
 
@@ -479,7 +460,7 @@ void loopWakeUpFormTouchScreen(TTGOClass *ttgo)
  */
 void setupToggleScreen(TTGOClass *ttgo)
 {
-    //Serial.println("setupToggleScreen.BEGIN");
+    
     pinMode(AXP202_INT, INPUT_PULLUP);
     attachInterrupt(AXP202_INT, []
                     { irqPEK = true; }, FALLING);
@@ -488,14 +469,13 @@ void setupToggleScreen(TTGOClass *ttgo)
     ttgo->power->clearIRQ();
 
     pinMode(TOUCH_INT, INPUT);
-    //Serial.println("setupToggleScreen.END");
+    
 }
 
 void initInterface(TTGOClass *ttgo)
 {
 
-    //Serial.println("setup.BEGIN");
-
+    
     // ref: https://github.com/Xinyuan-LilyGO/TTGO_TWatch_Library/blob/master/examples/LVGL/Lvgl_Button/Lvgl_Button.ino#L18
     // ttgo = TTGOClass::getWatch(); // get an instance of TTGO class
                     // Initialize TTGO smartwatch hardware
@@ -520,7 +500,7 @@ void initInterface(TTGOClass *ttgo)
     // Load the initial screen (Main Menu)
     // ref: https://docs.lvgl.io/8/overview/display.html
     lv_scr_load(main_view);
-    //Serial.println("setup.END");
+    
 }
 
 
@@ -556,13 +536,6 @@ interfaceEvent handleTasksInterface(TTGOClass *ttgo, tripData * trip, systemGlob
         refreshSessionView();
     }
     
-
-    
-
-    // char steps[32]; // Ensure the buffer is large enough
-    // sprintf(steps, "%u", stepCount);
-    // Serial.println(steps)
-
     return returnData;
 }
 

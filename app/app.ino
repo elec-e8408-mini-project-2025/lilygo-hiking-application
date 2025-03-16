@@ -290,15 +290,15 @@ static void event_handler(lv_obj_t *obj, lv_event_t event)
  * when session view is rendered
  */
 void refreshSessionView() {
-    // Serial.println("refreshSesssionView.BEGIN");
+    
     // ref: https://docs.lvgl.io/7.11/get-started/quick-overview.html#widgets
     if (session_view == lv_scr_act()) {
-      // Serial.println("refreshSessionView.cleanAndLoadSessionView");
+      
       lv_obj_clean(session_view);
       createSessionView();
       lv_scr_load(session_view);
     }
-    // Serial.println("refreshSesssionView.END");
+    
     
 }
 
@@ -440,7 +440,7 @@ void setup()
  * applied based on TTGO example WakeUpFormTouchScreen
  */
 void loopWakeUpFormTouchScreen() {
-  // Serial.println("loopWakeUpFormTouchScreen.BEGIN");
+  
   if (irqPEK) {
     Serial.println("PEK pressed");
     irqPEK = false;
@@ -474,7 +474,7 @@ void loopWakeUpFormTouchScreen() {
 
     ttgo->power->clearIRQ();
     
-    // Serial.println("loopWakeUpFormTouchScreen.END");
+    
   }
     
 }
@@ -484,7 +484,7 @@ void loopWakeUpFormTouchScreen() {
  * Code taken from TTGO example stepCount
  */
 void loopAccelerator() {
-  // Serial.println("loopAccelerator.BEGIN");
+  
   if (irqAcc && hasActiveSession) {
         Serial.println("Accelerator interrupt");
         irqAcc = 0;
@@ -505,7 +505,7 @@ void loopAccelerator() {
         Serial.println(stepCount);
         
     }
-    // Serial.println("loopAccelerator.END");
+    
 
 }
 
@@ -555,7 +555,7 @@ void init_global_styles() {
  */
 void loop()
 {
-    // Serial.println("loop.BEGIN");
+    
     lv_task_handler(); // Handle LVGL tasks
 
     loopAccelerator();
@@ -571,5 +571,5 @@ void loop()
     }
 
     delay(20);          // Short delay to avoid overloading the processor
-    // Serial.println("loop.END");
+    
 }
