@@ -65,23 +65,6 @@ void initGPS(TTGOClass *ttgo) {
         Serial.print("Failed GPS setup");
     }
 
-    // Display on the screen, latitude and longitude, number of satellites, and date and time
-    //eSpLoaction   = new TFT_eSprite(tft); // Sprite object for eSpLoaction
-    //eSpDate   = new TFT_eSprite(tft); // Sprite object for eSpDate
-    //eSpTime   = new TFT_eSprite(tft); // Sprite object for eSpTime
-    //eSpSatellites   = new TFT_eSprite(tft); // Sprite object for eSpSatellites
-
-    //eSpLoaction->createSprite(240, 48);
-    //eSpLoaction->setTextFont(2);
-
-    //eSpDate->createSprite(240, 48);
-    //eSpDate->setTextFont(2);
-
-    //eSpTime->createSprite(240, 48);
-    //eSpTime->setTextFont(2);
-
-    //eSpSatellites->createSprite(240, 48);
-    //eSpSatellites->setTextFont(2);
 
     last = millis();
 }
@@ -102,13 +85,6 @@ double getLon() {
     return gps->location.lng();
 }
 
-// uint32_t getTime() {
-//     return gps->time.value();
-// }
-
-// uint32_t getDate() {
-//     return gps->date.value();
-// }
 
 bool isGPSavailable()
 {
@@ -136,26 +112,9 @@ GPSPoint takeStep() {
 
 
 
-/*
-uint8_t, uint8_t, uint8_t getTime() {
-    uint8_t hour = gps->time.hour();
-    uint8_t minute = gps->time.minute();
-    uint8_t second = gps->time.second();
-    return hours, minutes, seconds;
-}
-
-uint8_t, uint8_t, uint8_t getDate() {
-    uint8_t year = gps->time.year();
-    uint8_t month = gps->time.month();
-    uint8_t day = gps->time.day();
-    return hours, minutes, seconds;
-}
-*/
-
-
 void setRTCTime(PCF8563_Class *rtc) {
     Serial.println("updating GPS");
-    uint8_t year = gps->date.year();
+    uint8_t year = gps->date.year() - 8; // There is small offset in the year
     uint8_t month = gps->date.month();
     uint8_t day = gps->date.day();
     uint8_t hour = gps->time.hour();

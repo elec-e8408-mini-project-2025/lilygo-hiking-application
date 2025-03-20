@@ -39,7 +39,6 @@ serialBuffer handleSerialByte()
     }
     if(commandFinishedSer)
     {
-        // restfulPacket restfulData =  restfulHandlePacket(rxDataSer, &byteCountSer, trips);
         ret.buf = rxDataSer;
         ret.bufLen = byteCountSer;
         if(ret.bufLen)

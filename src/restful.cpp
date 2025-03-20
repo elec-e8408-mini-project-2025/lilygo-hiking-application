@@ -177,7 +177,6 @@ int postAddressContent(restfulPacket * packet, tripData *trips)
             break;
     }
 
-    // packet->type = RESTFUL_ERROR; // NOT YET IMPLEMENTED
     return 0;
 }
 
