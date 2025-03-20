@@ -18,7 +18,7 @@ uint32_t currentSteps = 0;
  */
 void initAccelerator(TTGOClass *ttgo)
 {
-    //Serial.println("setupAccelerator.BEGIN");
+    
     sensor = ttgo->bma;
 
     // Accel parameter structure
@@ -89,7 +89,7 @@ void initAccelerator(TTGOClass *ttgo)
 
     // Turn on step interrupt
     sensor->enableStepCountInterrupt();
-    //Serial.println("setupAccelerator.END");
+    
 }
 
 /*
@@ -103,10 +103,10 @@ void initAccelerator(TTGOClass *ttgo)
 uint32_t handleTasksAccelerator()
 {
 
-    // Serial.println("loopAccelerator.BEGIN");
+    
     if (irqAcc)
     {
-        //Serial.println("Accelerator interrupt");
+        
         irqAcc = 0;
         bool rlst;
         do
@@ -121,13 +121,9 @@ uint32_t handleTasksAccelerator()
         {
             // Get step data from register
             currentSteps = sensor->getCounter();
-        }
-        // Print step count to serial
-        //Serial.print("Step Count: ");
-        //Serial.println(stepCount);
+        }        
     }
     return currentSteps;
-    // Serial.println("loopAccelerator.END");
 }
 
 void resetAccelerator()
