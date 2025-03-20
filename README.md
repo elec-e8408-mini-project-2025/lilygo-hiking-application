@@ -1,10 +1,20 @@
 # LilyGo Hiking Application
 
-Initial commit
+LilyGO T-Watch Hiking application is part of Hiking Band System, together with the Hiking Tour Assistant Data Storage. This project provides an application for the LilyGO T-Watch smartwatch. 
+
+
+## How to get started
+
+This project has been released together with the Hiking Tour Assistant Data Storage. Within the final release are documentation to help get started. The final release has been provided as a compressed archive as a course submission. 
 
 ## Requirements
 
-What is required to install and run this application
+The smartwatch development has the following dependencies
+
+- arduino-cli v. 1.1
+- esp32 libraries v. 2.0.14
+- python 3.10 or greater
+- pyserial 3.5
 
 ## Installation
 
@@ -80,7 +90,3 @@ putty
 or
 screen /dev/ttyUSB0 115200
 ```
-
-
-## Getting started
-
