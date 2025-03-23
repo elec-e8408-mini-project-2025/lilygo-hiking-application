@@ -90,3 +90,7 @@ putty
 or
 screen /dev/ttyUSB0 115200
 ```
+
+# Important: releases
+
+Arduino expects directory for main `.ino` file to have the same name as the `.ino` -file. For Github releases the tag is appended to the end of the directory name as a suffix. Please rename the directory to match the `.ino` file before installation, i.e. the directory should be `lilygo-hiking-application`
